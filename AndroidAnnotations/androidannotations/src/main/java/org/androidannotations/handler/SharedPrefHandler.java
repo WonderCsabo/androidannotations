@@ -277,7 +277,7 @@ public class SharedPrefHandler extends BaseAnnotationHandler<SharedPrefHolder> i
 		} else {
 			IRInnerClass idClass = rClass.get(IRClass.Res.STRING);
 			JFieldRef idRef = idClass.getIdStaticRef(keyResId, processHolder);
-			keyExpression = holder.getContextField().invoke("getString").arg(idRef);
+			keyExpression = holder.getEditorContextField().invoke("getString").arg(idRef);
 		}
 
 		holder.createFieldMethod(prefFieldClass, keyExpression, fieldName, fieldHelperMethodName, defaultValueExpr);
