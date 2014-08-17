@@ -44,6 +44,7 @@ import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JFieldVar;
+import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JVar;
@@ -71,12 +72,14 @@ public class SharedPrefHolder extends BaseGeneratedClassHolder {
 		}
 	};
 
+	private JMethod constructor;
 	private JBlock constructorSuperBlock;
 	private JVar constructorContextParam;
 	private JFieldVar contextField;
 	private JDefinedClass editorClass;
 	private JFieldVar editorContextField;
 	private JMethod editorConstructor;
+	private JInvocation editMethodEditorInvocation;
 
 	public SharedPrefHolder(ProcessHolder processHolder, TypeElement annotatedElement) throws Exception {
 		super(processHolder, annotatedElement);
@@ -105,12 +108,12 @@ public class SharedPrefHolder extends BaseGeneratedClassHolder {
 		JClass sharedPreferencesClass = processHolder.refClass("android.content.SharedPreferences");
 		JVar sharedPreferencesParam = editorConstructor.param(sharedPreferencesClass, "sharedPreferences");
 		editorConstructor.body().invoke("super").arg(sharedPreferencesParam);
-		editorConstructor.param(classes().CONTEXT, "context");
 	}
 
 	private void createEditMethod() {
 		JMethod editMethod = generatedClass.method(PUBLIC, editorClass, "edit");
-		editMethod.body()._return(JExpr._new(editorClass).arg(JExpr.invoke("getSharedPreferences")).arg(getContextField()));
+		editMethodEditorInvocation = JExpr._new(editorClass).arg(JExpr.invoke("getSharedPreferences"));
+		editMethod.body()._return(editMethodEditorInvocation);
 	}
 
 	public void createFieldMethod(Class<?> prefFieldHelperClass, JExpression keyExpression, String fieldName, String fieldHelperMethodName, JExpression defaultValue) {
@@ -141,12 +144,18 @@ public class SharedPrefHolder extends BaseGeneratedClassHolder {
 		return constructorContextParam;
 	}
 
+	public JMethod getConstructor() {
+		if (constructor == null) {
+			setConstructor();
+		}
+		return constructor;
+	}
+
 	private void setConstructor() {
-		JMethod constructor = generatedClass.constructor(PUBLIC);
+		constructor = generatedClass.constructor(PUBLIC);
 		constructorContextParam = constructor.param(classes().CONTEXT, "context");
 		JBlock constructorBody = constructor.body();
 		constructorSuperBlock = constructorBody.block();
-		constructorBody.assign(JExpr._this().ref(getContextField()), constructorContextParam);
 	}
 
 	public JFieldVar getContextField() {
@@ -157,7 +166,8 @@ public class SharedPrefHolder extends BaseGeneratedClassHolder {
 	}
 
 	protected void setContextField() {
-		contextField = createContextField(generatedClass);
+		contextField = generatedClass.field(JMod.PRIVATE, classes().CONTEXT, "context_");
+		getConstructor().body().assign(JExpr._this().ref(contextField), getConstructorContextParam());
 	}
 
 	public JFieldVar getEditorContextField() {
@@ -168,11 +178,9 @@ public class SharedPrefHolder extends BaseGeneratedClassHolder {
 	}
 
 	protected void setEditorContextField() {
-		editorContextField = createContextField(editorClass);
-		editorConstructor.body().assign(JExpr._this().ref(editorContextField), editorConstructor.listParams()[1]);
-	}
-
-	private JFieldVar createContextField(JDefinedClass generatedClass) {
-		return generatedClass.field(JMod.PRIVATE, classes().CONTEXT, "context_");
+		editorContextField = editorClass.field(JMod.PRIVATE, classes().CONTEXT, "context_");
+		JVar contextParam = editorConstructor.param(classes().CONTEXT, "context");
+		editorConstructor.body().assign(JExpr._this().ref(editorContextField), contextParam);
+		editMethodEditorInvocation.arg(getContextField());
 	}
 }
