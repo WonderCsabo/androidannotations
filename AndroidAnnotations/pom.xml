@@ -287,9 +287,9 @@
 	</build>
 
 	<scm>
-		<connection>scm:git:git@github.com:excilys/androidannotations.git</connection>
-		<developerConnection>scm:git:git@github.com:excilys/androidannotations.git</developerConnection>
-		<url>https://github.com/excilys/androidannotations</url>
+		<connection>scm:git:git@github.com:WonderCsabo/androidannotations.git</connection>
+		<developerConnection>scm:git:git@github.com:WonderCsabo/androidannotations.git</developerConnection>
+		<url>https://github.com/WonderCsabo/androidannotations</url>
 	</scm>
 
 	<profiles>
