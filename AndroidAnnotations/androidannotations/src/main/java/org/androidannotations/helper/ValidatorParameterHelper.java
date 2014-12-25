@@ -20,9 +20,12 @@ import static java.util.Arrays.asList;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -34,9 +37,274 @@ import org.androidannotations.process.IsValid;
 
 public class ValidatorParameterHelper {
 
+	public interface Validator {
+		void validate(ExecutableElement executableElement, IsValid valid);
+	}
+
+	public interface ParameterValidator<T> extends Validator {
+		T extendsType(String fullyQualifiedName);
+
+		T type(String fullyQualifiedName);
+
+		T anyType();
+	}
+
+	public static class ParameterRequirement<O extends Validator> implements Validator {
+
+		protected final ParameterValidator<?> validator;
+
+		protected final MethodParameter lastParameter;
+
+		public ParameterRequirement(ParameterValidator<?> anyOrderParameterValidator, MethodParameter lastParameter) {
+			this.validator = anyOrderParameterValidator;
+			this.lastParameter = lastParameter;
+		}
+
+		@SuppressWarnings("unchecked")
+		public final O optional() {
+			lastParameter.required = false;
+			return (O) validator;
+		}
+
+		@SuppressWarnings("unchecked")
+		public final O required() {
+			return (O) validator;
+		}
+
+		@Override
+		public final void validate(ExecutableElement executableElement, IsValid valid) {
+			validator.validate(executableElement, valid);
+		}
+
+	}
+
+	public static class ChainableParameterRequirement<O extends Validator> extends ParameterRequirement<O> implements ParameterValidator<ParameterRequirement<O>> {
+		public ChainableParameterRequirement(ParameterValidator<?> anyOrderParameterValidator, MethodParameter lastParameter) {
+			super(anyOrderParameterValidator, lastParameter);
+		}
+
+		@Override
+		public final ParameterRequirement<O> extendsType(String fullyQualifiedName) {
+			validator.extendsType(fullyQualifiedName);
+			return this;
+		}
+
+		@Override
+		public final ParameterRequirement<O> type(String fullyQualifiedName) {
+			validator.extendsType(fullyQualifiedName);
+			return this;
+		}
+
+		@Override
+		public ParameterRequirement<O> anyType() {
+			validator.anyType();
+			return this;
+		}
+	}
+
+	abstract class ParameterValidatorBase<T> implements ParameterValidator<T> {
+		protected Set<MethodParameter> expectedParameters = new LinkedHashSet<MethodParameter>();
+
+		protected MethodParameter addExpectedParameter(String fullyQualifiedName, boolean required, boolean extending) {
+			MethodParameter param = new MethodParameter(fullyQualifiedName, required, extending);
+			expectedParameters.add(param);
+			return param;
+		}
+
+		protected final boolean extendsType(VariableElement param, String fullyQualifiedName) {
+			TypeMirror elementType = param.asType();
+
+			TypeElement typeElement = annotationHelper.typeElementFromQualifiedName(fullyQualifiedName);
+			if (typeElement != null) {
+				TypeMirror expectedType = typeElement.asType();
+				return annotationHelper.isSubtype(elementType, expectedType);
+			}
+			return false;
+		}
+
+		protected final boolean exactType(VariableElement param, String fullyQualifiedName) {
+			return param.asType().toString().equals(fullyQualifiedName);
+		}
+
+		protected void invalidate(ExecutableElement executableElement, IsValid valid) {
+			printMessage(executableElement);
+			valid.invalidate();
+		}
+
+		protected final void printMessage(ExecutableElement element) {
+			annotationHelper.printAnnotationError(element, "%s can only have the following parameters: " + createMessage(element));
+		}
+
+		protected String createMessage(ExecutableElement element) {
+			StringBuilder builder = new StringBuilder();
+			builder.append("[ ");
+			for (MethodParameter parameter : expectedParameters) {
+				builder.append(parameter).append(",");
+			}
+			return builder.append(" ]").toString();
+		}
+
+		@Override
+		public void validate(ExecutableElement executableElement, IsValid valid) {
+			List<? extends VariableElement> parameters = executableElement.getParameters();
+
+			if (parameters.size() > expectedParameters.size()) {
+				invalidate(executableElement, valid);
+				return;
+			}
+
+			int index = 0;
+
+			for (MethodParameter expectedParameter : expectedParameters) {
+				if (index < parameters.size()) {
+					VariableElement parameter = parameters.get(index);
+
+					if (expectedParameter.extending && !extendsType(parameter, expectedParameter.typeName)) {
+						invalidate(executableElement, valid);
+						return;
+					} else if (!expectedParameter.extending && !exactType(parameter, expectedParameter.typeName)) {
+						invalidate(executableElement, valid);
+						return;
+					}
+				} else if (expectedParameter.required) {
+					invalidate(executableElement, valid);
+				}
+
+				++index;
+			}
+		}
+
+		@Override
+		public T anyType() {
+			return extendsType(CanonicalNameConstants.OBJECT);
+		}
+	}
+
+	public class AnyOrderParameterValidator extends ParameterValidatorBase<ChainableParameterRequirement<AnyOrderParameterValidator>> {
+
+		@Override
+		public void validate(ExecutableElement executableElement, IsValid valid) {
+			for (VariableElement parameter : executableElement.getParameters()) {
+				MethodParameter foundParameter = null;
+
+				for (MethodParameter expectedParameter : expectedParameters) {
+					if (exactType(parameter, expectedParameter.typeName) || extendsType(parameter, expectedParameter.typeName)) {
+						foundParameter = expectedParameter;
+						break;
+					}
+				}
+
+				if (foundParameter != null) {
+					expectedParameters.remove(foundParameter);
+				} else {
+					invalidate(executableElement, valid);
+					return;
+				}
+			}
+
+			for (MethodParameter expectedParameter : expectedParameters) {
+				if (expectedParameter.required) {
+					invalidate(executableElement, valid);
+					return;
+				}
+			}
+		}
+
+		@Override
+		public ChainableParameterRequirement<AnyOrderParameterValidator> extendsType(String fullyQualifiedName) {
+			return new ChainableParameterRequirement<AnyOrderParameterValidator>(this, addExpectedParameter(fullyQualifiedName, true, true));
+		}
+
+		@Override
+		public ChainableParameterRequirement<AnyOrderParameterValidator> type(String fullyQualifiedName) {
+			return new ChainableParameterRequirement<AnyOrderParameterValidator>(this, addExpectedParameter(fullyQualifiedName, true, false));
+		}
+
+		@Override
+		protected String createMessage(ExecutableElement element) {
+			return super.createMessage(element) + " in any order";
+		}
+	}
+
+	public class InOrderParameterValidator extends ParameterValidatorBase<ChainableParameterRequirement<InOrderParameterValidator>> {
+
+		@Override
+		public ChainableParameterRequirement<InOrderParameterValidator> extendsType(String fullyQualifiedName) {
+			return new ChainableParameterRequirement<InOrderParameterValidator>(this, addExpectedParameter(fullyQualifiedName, true, true));
+		}
+
+		@Override
+		public ChainableParameterRequirement<InOrderParameterValidator> type(String fullyQualifiedName) {
+			return new ChainableParameterRequirement<InOrderParameterValidator>(this, addExpectedParameter(fullyQualifiedName, true, false));
+		}
+
+		@Override
+		protected String createMessage(ExecutableElement element) {
+			return super.createMessage(element) + " in the order above";
+		}
+	}
+
+	public class OneParamValidator extends ParameterValidatorBase<ParameterRequirement<Validator>> {
+
+		@Override
+		public ParameterRequirement<Validator> extendsType(String fullyQualifiedName) {
+			return new ParameterRequirement<Validator>(this, addExpectedParameter(fullyQualifiedName, true, true));
+		}
+
+		@Override
+		public ParameterRequirement<Validator> type(String fullyQualifiedName) {
+			return new ParameterRequirement<Validator>(this, addExpectedParameter(fullyQualifiedName, true, false));
+		}
+
+	}
+
+	public class NoParamValidator implements Validator {
+
+		@Override
+		public void validate(ExecutableElement executableElement, IsValid valid) {
+			if (!executableElement.getParameters().isEmpty()) {
+				annotationHelper.printAnnotationError(executableElement, "%s cannot have any parameters");
+				valid.invalidate();
+			}
+		}
+	}
+
+	public class MethodParameter {
+
+		private String typeName;
+		private boolean required;
+		private boolean extending;
+
+		public MethodParameter(String typeName, boolean required, boolean extending) {
+			this.typeName = typeName;
+			this.required = required;
+			this.extending = extending;
+		}
+
+		@Override
+		public String toString() {
+			return "[ " + (extending ? " extending " : "") + typeName + (required ? " (required) " : " (optional) " + "]");
+		}
+	}
+
+	public Validator noparam() {
+		return new NoParamValidator();
+	}
+
+	public OneParamValidator oneparam() {
+		return new OneParamValidator();
+	}
+
+	public InOrderParameterValidator inorder() {
+		return new InOrderParameterValidator();
+	}
+
+	public AnyOrderParameterValidator anyorder() {
+		return new AnyOrderParameterValidator();
+	}
+
 	private static final List<String> ANDROID_SHERLOCK_MENU_ITEM_QUALIFIED_NAMES = asList(CanonicalNameConstants.MENU_ITEM, CanonicalNameConstants.SHERLOCK_MENU_ITEM);
-	private static final List<String> EDITOR_ACTION_ALLOWED_PARAMETER_TYPES = asList(CanonicalNameConstants.TEXT_VIEW,
-		CanonicalNameConstants.INTEGER, "int", CanonicalNameConstants.KEY_EVENT);
+	private static final List<String> EDITOR_ACTION_ALLOWED_PARAMETER_TYPES = asList(CanonicalNameConstants.TEXT_VIEW, CanonicalNameConstants.INTEGER, "int", CanonicalNameConstants.KEY_EVENT);
 
 	protected final TargetAnnotationHelper annotationHelper;
 
@@ -138,7 +406,7 @@ public class ValidatorParameterHelper {
 			String parameterType = parameter.asType().toString();
 			if (parameterType.equals(typeCanonicalName)) {
 				if (parameterOfTypeFound) {
-					annotationHelper.printAnnotationError(executableElement, "You can declare only one parameter of type "+typeCanonicalName);
+					annotationHelper.printAnnotationError(executableElement, "You can declare only one parameter of type " + typeCanonicalName);
 					valid.invalidate();
 				}
 				parameterOfTypeFound = true;
@@ -151,7 +419,7 @@ public class ValidatorParameterHelper {
 		for (VariableElement parameter : executableElement.getParameters()) {
 			if (parameter.asType().getKind() == typeKind || parameter.asType().toString().equals(typeCanonicalName)) {
 				if (parameterOfTypeFound) {
-					annotationHelper.printAnnotationError(executableElement, "You can declare only one parameter of type "+typeKind.name()+" or "+typeCanonicalName);
+					annotationHelper.printAnnotationError(executableElement, "You can declare only one parameter of type " + typeKind.name() + " or " + typeCanonicalName);
 					valid.invalidate();
 				}
 				parameterOfTypeFound = true;
@@ -160,17 +428,17 @@ public class ValidatorParameterHelper {
 	}
 
 	public void hasNoOtherParameterThanCompoundButtonOrBoolean(ExecutableElement executableElement, IsValid valid) {
-		String[] types = new String[]{CanonicalNameConstants.COMPOUND_BUTTON, CanonicalNameConstants.BOOLEAN, "boolean"};
+		String[] types = new String[] { CanonicalNameConstants.COMPOUND_BUTTON, CanonicalNameConstants.BOOLEAN, "boolean" };
 		hasNotOtherParameterThanTypes(types, executableElement, valid);
 	}
 
 	public void hasNoOtherParameterThanMotionEventOrView(ExecutableElement executableElement, IsValid valid) {
-		String[] types = new String[]{CanonicalNameConstants.MOTION_EVENT, CanonicalNameConstants.VIEW};
+		String[] types = new String[] { CanonicalNameConstants.MOTION_EVENT, CanonicalNameConstants.VIEW };
 		hasNotOtherParameterThanTypes(types, executableElement, valid);
 	}
 
 	public void hasNoOtherParameterThanViewOrBoolean(ExecutableElement executableElement, IsValid valid) {
-		String[] types = new String[]{CanonicalNameConstants.VIEW, CanonicalNameConstants.BOOLEAN, "boolean"};
+		String[] types = new String[] { CanonicalNameConstants.VIEW, CanonicalNameConstants.BOOLEAN, "boolean" };
 		hasNotOtherParameterThanTypes(types, executableElement, valid);
 	}
 
@@ -179,7 +447,7 @@ public class ValidatorParameterHelper {
 		for (VariableElement parameter : executableElement.getParameters()) {
 			String parameterType = parameter.asType().toString();
 			if (!types.contains(parameterType)) {
-				annotationHelper.printAnnotationError(executableElement, "You can declare only parameters of type "+Arrays.toString(typesCanonicalNames));
+				annotationHelper.printAnnotationError(executableElement, "You can declare only parameters of type " + Arrays.toString(typesCanonicalNames));
 				valid.invalidate();
 			}
 		}
@@ -191,12 +459,12 @@ public class ValidatorParameterHelper {
 	}
 
 	public void hasNoOtherParameterThanContextOrIntentOrReceiverActionExtraAnnotated(ExecutableElement executableElement, IsValid valid) {
-		String[] types = new String[] {CanonicalNameConstants.CONTEXT, CanonicalNameConstants.INTENT};
+		String[] types = new String[] { CanonicalNameConstants.CONTEXT, CanonicalNameConstants.INTENT };
 		hasNotOtherParameterThanTypesOrAnnotatedWith(types, ReceiverAction.Extra.class, executableElement, valid);
 	}
 
 	public void hasNoOtherParameterThanIntentOrIntOrOnActivityResultExtraAnnotated(ExecutableElement executableElement, IsValid valid) {
-		String[] types = new String[] {CanonicalNameConstants.INTENT, CanonicalNameConstants.INTEGER, "int"};
+		String[] types = new String[] { CanonicalNameConstants.INTENT, CanonicalNameConstants.INTEGER, "int" };
 		hasNotOtherParameterThanTypesOrAnnotatedWith(types, OnActivityResult.Extra.class, executableElement, valid);
 	}
 
@@ -205,7 +473,7 @@ public class ValidatorParameterHelper {
 		for (VariableElement parameter : executableElement.getParameters()) {
 			String parameterType = parameter.asType().toString();
 			if (!types.contains(parameterType) && parameter.getAnnotation(annotationClass) == null) {
-				annotationHelper.printAnnotationError(executableElement, "You can declare only parameters of type "+Arrays.toString(typesCanonicalNames)+" or parameters annotated with @"+annotationClass.getCanonicalName());
+				annotationHelper.printAnnotationError(executableElement, "You can declare only parameters of type " + Arrays.toString(typesCanonicalNames) + " or parameters annotated with @" + annotationClass.getCanonicalName());
 				valid.invalidate();
 			}
 		}
@@ -259,7 +527,7 @@ public class ValidatorParameterHelper {
 			if (qualifiedNames.contains(parameter.asType().toString())) {
 				if (hasOneMatchingParameter) {
 					valid.invalidate();
-					annotationHelper.printAnnotationError(executableElement, "%s can't have more than one parameter of type "+parameter.asType().toString());
+					annotationHelper.printAnnotationError(executableElement, "%s can't have more than one parameter of type " + parameter.asType().toString());
 				} else {
 					hasOneMatchingParameter = true;
 				}
