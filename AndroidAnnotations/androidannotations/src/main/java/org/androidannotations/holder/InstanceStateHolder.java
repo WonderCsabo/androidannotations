@@ -20,15 +20,7 @@ import static com.sun.codemodel.JExpr.ref;
 import static com.sun.codemodel.JMod.PRIVATE;
 import static com.sun.codemodel.JMod.PUBLIC;
 
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.TypeElement;
-
-import org.androidannotations.process.ProcessHolder;
-
 import com.sun.codemodel.JBlock;
-import com.sun.codemodel.JClass;
-import com.sun.codemodel.JCodeModel;
-import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JVar;
@@ -98,45 +90,5 @@ public class InstanceStateHolder extends GeneratedClassHolderDecorator<EComponen
 
 	public JMethod getInit() {
 		return holder.getInit();
-	}
-
-	@Override
-	public JDefinedClass getGeneratedClass() {
-		return holder.getGeneratedClass();
-	}
-
-	@Override
-	public JCodeModel codeModel() {
-		return holder.codeModel();
-	}
-
-	@Override
-	public ProcessHolder.Classes classes() {
-		return holder.classes();
-	}
-
-	@Override
-	public TypeElement getAnnotatedElement() {
-		return holder.getAnnotatedElement();
-	}
-
-	@Override
-	public ProcessingEnvironment processingEnvironment() {
-		return holder.processingEnvironment();
-	}
-
-	@Override
-	public JClass refClass(String fullyQualifiedClassName) {
-		return holder.refClass(fullyQualifiedClassName);
-	}
-
-	@Override
-	public JClass refClass(Class<?> clazz) {
-		return holder.refClass(clazz);
-	}
-
-	@Override
-	public JDefinedClass definedClass(String fullyQualifiedClassName) {
-		return holder.definedClass(fullyQualifiedClassName);
 	}
 }
