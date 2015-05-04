@@ -15,14 +15,14 @@
  */
 package org.androidannotations.handler;
 
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-
 import org.androidannotations.annotations.AfterInject;
 import org.androidannotations.holder.EComponentHolder;
 import org.androidannotations.model.AnnotationElements;
 import org.androidannotations.process.IsValid;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 
 public class AfterInjectHandler extends BaseAnnotationHandler<EComponentHolder> {
 
@@ -42,7 +42,7 @@ public class AfterInjectHandler extends BaseAnnotationHandler<EComponentHolder> 
 
 		validatorHelper.doesntThrowException(executableElement, valid);
 
-		validatorHelper.param.zeroParameter(executableElement, valid);
+		validatorHelper.param.noParam().validate(executableElement, valid);
 	}
 
 	@Override

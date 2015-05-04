@@ -51,7 +51,7 @@ public class ItemLongClickHandler extends AbstractListenerHandler {
 
 		validatorHelper.returnTypeIsVoidOrBoolean(executableElement, valid);
 
-		validatorHelper.param.zeroOrOneParameter(executableElement, valid);
+		validatorHelper.param.anyType().optional().validate(executableElement, valid);
 	}
 
 	@Override

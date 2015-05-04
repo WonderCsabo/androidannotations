@@ -15,8 +15,16 @@
  */
 package org.androidannotations.handler;
 
+import com.sun.codemodel.JBlock;
+import com.sun.codemodel.JClass;
+import com.sun.codemodel.JDefinedClass;
+import com.sun.codemodel.JInvocation;
+import com.sun.codemodel.JMethod;
+import com.sun.codemodel.JMod;
+import com.sun.codemodel.JVar;
 import org.androidannotations.annotations.FocusChange;
 import org.androidannotations.helper.CanonicalNameConstants;
+import org.androidannotations.holder.EComponentWithViewSupportHolder;
 import org.androidannotations.model.AnnotationElements;
 import org.androidannotations.process.IsValid;
 
@@ -27,16 +35,6 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
-
-import org.androidannotations.holder.EComponentWithViewSupportHolder;
-
-import com.sun.codemodel.JBlock;
-import com.sun.codemodel.JClass;
-import com.sun.codemodel.JDefinedClass;
-import com.sun.codemodel.JInvocation;
-import com.sun.codemodel.JMethod;
-import com.sun.codemodel.JMod;
-import com.sun.codemodel.JVar;
 
 public class FocusChangeHandler extends AbstractListenerHandler {
 
@@ -52,11 +50,10 @@ public class FocusChangeHandler extends AbstractListenerHandler {
 
 		validatorHelper.returnTypeIsVoid(executableElement, valid);
 
-		validatorHelper.param.hasZeroOrOneViewParameter(executableElement, valid);
-
-		validatorHelper.param.hasZeroOrOneBooleanParameter(executableElement, valid);
-
-		validatorHelper.param.hasNoOtherParameterThanViewOrBoolean(executableElement, valid);
+		validatorHelper.param.anyOrder()
+				.type(CanonicalNameConstants.VIEW).optional()
+				.primitiveOrWrapper(TypeKind.BOOLEAN).optional()
+				.validate(executableElement, valid);
 	}
 
 	@Override

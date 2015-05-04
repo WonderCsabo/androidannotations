@@ -15,20 +15,13 @@
  */
 package org.androidannotations.handler;
 
-import static com.sun.codemodel.JExpr.TRUE;
-import static com.sun.codemodel.JExpr.invoke;
-
-import java.util.List;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-
+import com.sun.codemodel.JBlock;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JFieldRef;
+import com.sun.codemodel.JInvocation;
 import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.helper.AndroidManifest;
+import org.androidannotations.helper.CanonicalNameConstants;
 import org.androidannotations.helper.IdAnnotationHelper;
 import org.androidannotations.helper.IdValidatorHelper;
 import org.androidannotations.holder.HasOptionsMenu;
@@ -37,10 +30,16 @@ import org.androidannotations.model.AnnotationElements;
 import org.androidannotations.process.IsValid;
 import org.androidannotations.rclass.IRClass;
 
-import com.sun.codemodel.JBlock;
-import com.sun.codemodel.JExpression;
-import com.sun.codemodel.JFieldRef;
-import com.sun.codemodel.JInvocation;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import java.util.List;
+
+import static com.sun.codemodel.JExpr.TRUE;
+import static com.sun.codemodel.JExpr.invoke;
 
 public class OptionsItemHandler extends BaseAnnotationHandler<HasOptionsMenu> {
 
@@ -72,7 +71,8 @@ public class OptionsItemHandler extends BaseAnnotationHandler<HasOptionsMenu> {
 
 		validatorHelper.returnTypeIsVoidOrBoolean(executableElement, valid);
 
-		validatorHelper.param.zeroOrOneMenuItemParameter(executableElement, valid);
+		validatorHelper.param.anyOfTypes(CanonicalNameConstants.MENU_ITEM, CanonicalNameConstants.SHERLOCK_MENU_ITEM).optional()
+				.validate(executableElement, valid);
 	}
 
 	@Override

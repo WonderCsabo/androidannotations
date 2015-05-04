@@ -15,16 +15,6 @@
  */
 package org.androidannotations.handler;
 
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-
-import org.androidannotations.annotations.Transactional;
-import org.androidannotations.helper.APTCodeModelHelper;
-import org.androidannotations.holder.EComponentHolder;
-import org.androidannotations.model.AnnotationElements;
-import org.androidannotations.process.IsValid;
-
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JCatchBlock;
 import com.sun.codemodel.JClass;
@@ -34,6 +24,16 @@ import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JTryBlock;
 import com.sun.codemodel.JVar;
+import org.androidannotations.annotations.Transactional;
+import org.androidannotations.helper.APTCodeModelHelper;
+import org.androidannotations.helper.CanonicalNameConstants;
+import org.androidannotations.holder.EComponentHolder;
+import org.androidannotations.model.AnnotationElements;
+import org.androidannotations.process.IsValid;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 
 public class TransactionalHandler extends BaseAnnotationHandler<EComponentHolder> {
 
@@ -55,7 +55,10 @@ public class TransactionalHandler extends BaseAnnotationHandler<EComponentHolder
 
 		validatorHelper.isNotFinal(element, valid);
 
-		validatorHelper.param.hasOneOrTwoParametersAndFirstIsDb(executableElement, valid);
+		validatorHelper.param.inOrder()
+				.type(CanonicalNameConstants.SQLITE_DATABASE)
+				.anyType().multiple().optional()
+				.validate(executableElement, valid);
 	}
 
 	@Override
