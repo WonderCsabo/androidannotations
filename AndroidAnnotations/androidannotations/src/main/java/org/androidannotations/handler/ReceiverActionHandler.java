@@ -15,27 +15,6 @@
  */
 package org.androidannotations.handler;
 
-import static com.sun.codemodel.JExpr._new;
-import static com.sun.codemodel.JExpr._null;
-import static com.sun.codemodel.JExpr.lit;
-import static com.sun.codemodel.JMod.FINAL;
-import static com.sun.codemodel.JMod.PUBLIC;
-import static com.sun.codemodel.JMod.STATIC;
-
-import java.util.List;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.VariableElement;
-
-import org.androidannotations.annotations.ReceiverAction;
-import org.androidannotations.helper.APTCodeModelHelper;
-import org.androidannotations.helper.CaseHelper;
-import org.androidannotations.holder.EReceiverHolder;
-import org.androidannotations.model.AnnotationElements;
-import org.androidannotations.process.IsValid;
-
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JExpression;
@@ -43,6 +22,26 @@ import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JOp;
 import com.sun.codemodel.JVar;
+import org.androidannotations.annotations.ReceiverAction;
+import org.androidannotations.helper.APTCodeModelHelper;
+import org.androidannotations.helper.CanonicalNameConstants;
+import org.androidannotations.helper.CaseHelper;
+import org.androidannotations.holder.EReceiverHolder;
+import org.androidannotations.model.AnnotationElements;
+import org.androidannotations.process.IsValid;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+import java.util.List;
+
+import static com.sun.codemodel.JExpr._new;
+import static com.sun.codemodel.JExpr._null;
+import static com.sun.codemodel.JExpr.lit;
+import static com.sun.codemodel.JMod.FINAL;
+import static com.sun.codemodel.JMod.PUBLIC;
+import static com.sun.codemodel.JMod.STATIC;
 
 public class ReceiverActionHandler extends BaseAnnotationHandler<EReceiverHolder> {
 
@@ -68,7 +67,12 @@ public class ReceiverActionHandler extends BaseAnnotationHandler<EReceiverHolder
 
 		validatorHelper.isNotPrivate(element, valid);
 
-		validatorHelper.param.hasNoOtherParameterThanContextOrIntentOrReceiverActionExtraAnnotated((ExecutableElement) element, valid);
+
+		validatorHelper.param.anyOrder()
+				.type(CanonicalNameConstants.CONTEXT).optional()
+				.type(CanonicalNameConstants.INTENT).optional()
+				.annotatedWith(ReceiverAction.Extra.class).multiple().optional()
+				.validate((ExecutableElement) element, valid);
 	}
 
 	@Override

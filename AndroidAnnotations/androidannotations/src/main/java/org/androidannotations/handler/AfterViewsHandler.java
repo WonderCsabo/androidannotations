@@ -15,14 +15,14 @@
  */
 package org.androidannotations.handler;
 
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.holder.EComponentWithViewSupportHolder;
 import org.androidannotations.model.AnnotationElements;
 import org.androidannotations.process.IsValid;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 
 public class AfterViewsHandler extends BaseAnnotationHandler<EComponentWithViewSupportHolder> {
 
@@ -42,7 +42,7 @@ public class AfterViewsHandler extends BaseAnnotationHandler<EComponentWithViewS
 
 		validatorHelper.doesntThrowException(executableElement, valid);
 
-		validatorHelper.param.zeroParameter(executableElement, valid);
+		validatorHelper.param.noParam().validate(executableElement, valid);
 	}
 
 	@Override

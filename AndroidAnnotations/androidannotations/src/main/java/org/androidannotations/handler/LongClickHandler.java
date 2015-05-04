@@ -15,20 +15,6 @@
  */
 package org.androidannotations.handler;
 
-import java.util.List;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-
-import org.androidannotations.annotations.LongClick;
-import org.androidannotations.holder.EComponentWithViewSupportHolder;
-import org.androidannotations.model.AnnotationElements;
-import org.androidannotations.process.IsValid;
-
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JDefinedClass;
@@ -37,6 +23,19 @@ import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JVar;
+import org.androidannotations.annotations.LongClick;
+import org.androidannotations.helper.CanonicalNameConstants;
+import org.androidannotations.holder.EComponentWithViewSupportHolder;
+import org.androidannotations.model.AnnotationElements;
+import org.androidannotations.process.IsValid;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import java.util.List;
 
 public class LongClickHandler extends AbstractListenerHandler {
 
@@ -52,7 +51,7 @@ public class LongClickHandler extends AbstractListenerHandler {
 
 		validatorHelper.returnTypeIsVoidOrBoolean(executableElement, valid);
 
-		validatorHelper.param.zeroOrOneViewParameter(executableElement, valid);
+		validatorHelper.param.type(CanonicalNameConstants.VIEW).optional().validate(executableElement, valid);
 	}
 
 	@Override

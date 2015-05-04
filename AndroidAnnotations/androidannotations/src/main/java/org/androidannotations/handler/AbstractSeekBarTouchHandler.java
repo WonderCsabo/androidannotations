@@ -15,13 +15,11 @@
  */
 package org.androidannotations.handler;
 
-import java.util.List;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.VariableElement;
-
+import com.sun.codemodel.JBlock;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JFieldRef;
+import com.sun.codemodel.JInvocation;
+import com.sun.codemodel.JVar;
 import org.androidannotations.helper.AndroidManifest;
 import org.androidannotations.helper.CanonicalNameConstants;
 import org.androidannotations.helper.IdAnnotationHelper;
@@ -33,11 +31,11 @@ import org.androidannotations.model.AnnotationElements;
 import org.androidannotations.process.IsValid;
 import org.androidannotations.rclass.IRClass;
 
-import com.sun.codemodel.JBlock;
-import com.sun.codemodel.JExpression;
-import com.sun.codemodel.JFieldRef;
-import com.sun.codemodel.JInvocation;
-import com.sun.codemodel.JVar;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+import java.util.List;
 
 public abstract class AbstractSeekBarTouchHandler extends BaseAnnotationHandler<EComponentWithViewSupportHolder> {
 
@@ -67,7 +65,7 @@ public abstract class AbstractSeekBarTouchHandler extends BaseAnnotationHandler<
 
 		validatorHelper.hasSeekBarTouchTrackingMethodParameters((ExecutableElement) element, valid);
 
-		validatorHelper.param.oneparam().type(CanonicalNameConstants.SEEKBAR).optional().validate((ExecutableElement) element, valid);
+		validatorHelper.param.type(CanonicalNameConstants.SEEKBAR).optional().validate((ExecutableElement) element, valid);
 	}
 
 	@Override

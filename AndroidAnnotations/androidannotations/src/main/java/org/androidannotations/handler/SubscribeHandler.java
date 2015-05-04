@@ -15,16 +15,16 @@
  */
 package org.androidannotations.handler;
 
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-
 import org.androidannotations.helper.APTCodeModelHelper;
 import org.androidannotations.helper.CanonicalNameConstants;
 import org.androidannotations.helper.TargetAnnotationHelper;
 import org.androidannotations.holder.EComponentHolder;
 import org.androidannotations.model.AnnotationElements;
 import org.androidannotations.process.IsValid;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 
 public class SubscribeHandler extends BaseAnnotationHandler<EComponentHolder> {
 
@@ -58,7 +58,7 @@ public class SubscribeHandler extends BaseAnnotationHandler<EComponentHolder> {
 
 		validatorHelper.isNotFinal(element, valid);
 
-		validatorHelper.param.hasExactlyOneParameter(executableElement, valid);
+		validatorHelper.param.anyType().validate(executableElement, valid);
 	}
 
 	@Override
