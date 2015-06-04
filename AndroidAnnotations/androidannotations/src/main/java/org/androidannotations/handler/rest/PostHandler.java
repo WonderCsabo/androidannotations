@@ -15,18 +15,34 @@
  */
 package org.androidannotations.handler.rest;
 
+import java.util.Collections;
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 
+import org.androidannotations.annotations.rest.Field;
 import org.androidannotations.annotations.rest.Post;
+import org.androidannotations.handler.AnnotationHandler;
+import org.androidannotations.handler.BaseAnnotationHandler;
+import org.androidannotations.handler.HasParameterHandlers;
+import org.androidannotations.holder.GeneratedClassHolder;
+import org.androidannotations.holder.RestHolder;
 import org.androidannotations.model.AnnotationElements;
 import org.androidannotations.process.IsValid;
 
-public class PostHandler extends RestMethodHandler {
+public class PostHandler extends RestMethodHandler implements HasParameterHandlers<RestHolder> {
+
+	private FieldHandler fieldHandler;
 
 	public PostHandler(ProcessingEnvironment processingEnvironment) {
 		super(Post.class, processingEnvironment);
+		fieldHandler = new FieldHandler(processingEnvironment);
+	}
+
+	@Override
+	public Iterable<AnnotationHandler<? extends GeneratedClassHolder>> getParameterHandlers() {
+		return Collections.<AnnotationHandler<? extends GeneratedClassHolder>> singleton(fieldHandler);
 	}
 
 	@Override
@@ -42,5 +58,23 @@ public class PostHandler extends RestMethodHandler {
 	protected String getUrlSuffix(Element element) {
 		Post annotation = element.getAnnotation(Post.class);
 		return annotation.value();
+	}
+
+	public class FieldHandler extends BaseAnnotationHandler<GeneratedClassHolder> {
+
+		public FieldHandler(ProcessingEnvironment processingEnvironment) {
+			super(Field.class, processingEnvironment);
+		}
+
+		@Override
+		public void process(Element element, GeneratedClassHolder holder) throws Exception {
+			// Don't do anything here.
+		}
+
+		@Override
+		protected void validate(Element element, AnnotationElements validatedElements, IsValid valid) {
+			validatorHelper.enclosingMethodHasAnnotation(Post.class, element, validatedElements, valid);
+		}
+
 	}
 }
