@@ -33,8 +33,8 @@ import static org.androidannotations.helper.ModelConstants.classSuffix;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,15 +108,15 @@ public class ValidatorHelper {
 
 	private static final String METHOD_NAME_GET_ROOT_URL = "getRootUrl";
 
-	private static final List<String> VALID_PREF_RETURN_TYPES = Arrays.asList("int", "boolean", "float", "long", CanonicalNameConstants.STRING, CanonicalNameConstants.STRING_SET);
+	private static final List<String> VALID_PREF_RETURN_TYPES = asList("int", "boolean", "float", "long", CanonicalNameConstants.STRING, CanonicalNameConstants.STRING_SET);
 
-	private static final List<String> INVALID_PREF_METHOD_NAMES = Arrays.asList("edit", "getSharedPreferences", "clear", "getEditor", "apply");
+	private static final List<String> INVALID_PREF_METHOD_NAMES = asList("edit", "getSharedPreferences", "clear", "getEditor", "apply");
 
-	private static final Collection<Integer> VALID_LOG_LEVELS = Arrays.asList(LOG_VERBOSE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR);
+	private static final Collection<Integer> VALID_LOG_LEVELS = asList(LOG_VERBOSE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR);
 
-	private static final List<Receiver.RegisterAt> VALID_ACTIVITY_REGISTER_AT = Arrays.asList(Receiver.RegisterAt.OnCreateOnDestroy, Receiver.RegisterAt.OnResumeOnPause, Receiver.RegisterAt.OnStartOnStop);
-	private static final List<Receiver.RegisterAt> VALID_SERVICE_REGISTER_AT = Arrays.asList(Receiver.RegisterAt.OnCreateOnDestroy);
-	private static final List<Receiver.RegisterAt> VALID_FRAGMENT_REGISTER_AT = Arrays.asList(Receiver.RegisterAt.OnCreateOnDestroy, Receiver.RegisterAt.OnResumeOnPause, Receiver.RegisterAt.OnStartOnStop, Receiver.RegisterAt.OnAttachOnDetach);
+	private static final List<Receiver.RegisterAt> VALID_ACTIVITY_REGISTER_AT = asList(Receiver.RegisterAt.OnCreateOnDestroy, Receiver.RegisterAt.OnResumeOnPause, Receiver.RegisterAt.OnStartOnStop);
+	private static final List<Receiver.RegisterAt> VALID_SERVICE_REGISTER_AT = asList(Receiver.RegisterAt.OnCreateOnDestroy);
+	private static final List<Receiver.RegisterAt> VALID_FRAGMENT_REGISTER_AT = asList(Receiver.RegisterAt.OnCreateOnDestroy, Receiver.RegisterAt.OnResumeOnPause, Receiver.RegisterAt.OnStartOnStop, Receiver.RegisterAt.OnAttachOnDetach);
 
 	private static final List<String> VALID_PREFERENCE_CLASSES = asList(CanonicalNameConstants.PREFERENCE_ACTIVITY, CanonicalNameConstants.PREFERENCE_FRAGMENT, CanonicalNameConstants.SUPPORT_V4_PREFERENCE_FRAGMENT, CanonicalNameConstants.MACHINARIUS_V4_PREFERENCE_FRAGMENT);
 
@@ -210,74 +210,72 @@ public class ValidatorHelper {
 		}
 	}
 
+	public void enclosingElementHasAnnotation(Class<? extends Annotation> annotation, Element element, AnnotationElements validatedElements, IsValid valid) {
+		enclosingElementHasOneOfAnnotations(element, validatedElements, Collections.<Class<? extends Annotation>> singletonList(annotation), valid);
+	}
+
 	public void enclosingElementHasEBeanAnnotation(Element element, AnnotationElements validatedElements, IsValid valid) {
-		Element enclosingElement = element.getEnclosingElement();
-		hasClassAnnotation(element, enclosingElement, validatedElements, EBean.class, valid);
+		enclosingElementHasAnnotation(EBean.class, element, validatedElements, valid);
 	}
 
 	public void enclosingElementHasEActivity(Element element, AnnotationElements validatedElements, IsValid valid) {
-		Element enclosingElement = element.getEnclosingElement();
-		hasClassAnnotation(element, enclosingElement, validatedElements, EActivity.class, valid);
+		enclosingElementHasAnnotation(EActivity.class, element, validatedElements, valid);
 	}
 
 	public void enclosingElementHasEActivityOrEFragment(Element element, AnnotationElements validatedElements, IsValid valid) {
-		Element enclosingElement = element.getEnclosingElement();
 		List<Class<? extends Annotation>> validAnnotations = asList(EActivity.class, EFragment.class);
-		hasOneOfClassAnnotations(element, enclosingElement, validatedElements, validAnnotations, valid);
+		enclosingElementHasOneOfAnnotations(element, validatedElements, validAnnotations, valid);
 	}
 
 	public void enclosingElementHasEActivityOrEFragmentOrEServiceOrEIntentService(Element element, AnnotationElements validatedElements, IsValid valid) {
-		Element enclosingElement = element.getEnclosingElement();
 		List<Class<? extends Annotation>> validAnnotations = asList(EActivity.class, EFragment.class, EService.class, EIntentService.class);
-		hasOneOfClassAnnotations(element, enclosingElement, validatedElements, validAnnotations, valid);
+		enclosingElementHasOneOfAnnotations(element, validatedElements, validAnnotations, valid);
 	}
 
 	public void enclosingElementHasEFragment(Element element, AnnotationElements validatedElements, IsValid valid) {
-		Element enclosingElement = element.getEnclosingElement();
-		hasClassAnnotation(element, enclosingElement, validatedElements, EFragment.class, valid);
+		enclosingElementHasAnnotation(EFragment.class, element, validatedElements, valid);
 	}
 
 	public void enclosingElementHasEIntentService(Element element, AnnotationElements validatedElements, IsValid valid) {
-		Element enclosingElement = element.getEnclosingElement();
-		hasClassAnnotation(element, enclosingElement, validatedElements, EIntentService.class, valid);
+		enclosingElementHasAnnotation(EIntentService.class, element, validatedElements, valid);
 	}
 
 	public void enclosingElementHasEReceiver(Element element, AnnotationElements validatedElements, IsValid valid) {
-		Element enclosingElement = element.getEnclosingElement();
-		hasClassAnnotation(element, enclosingElement, validatedElements, EReceiver.class, valid);
+		enclosingElementHasAnnotation(EReceiver.class, element, validatedElements, valid);
 	}
 
 	public void hasEActivity(Element element, AnnotationElements validatedElements, IsValid valid) {
-		hasClassAnnotation(element, element, validatedElements, EActivity.class, valid);
+		hasAnnotation(element, element, validatedElements, EActivity.class, valid);
 	}
 
 	public void hasEActivityOrEFragment(Element element, AnnotationElements validatedElements, IsValid valid) {
 		List<Class<? extends Annotation>> validAnnotations = asList(EActivity.class, EFragment.class);
-		hasOneOfClassAnnotations(element, element, validatedElements, validAnnotations, valid);
+		hasOneOfAnnotations(element, element, validatedElements, validAnnotations, valid);
 	}
 
 	public void enclosingElementHasEnhancedViewSupportAnnotation(Element element, AnnotationElements validatedElements, IsValid valid) {
-		Element enclosingElement = element.getEnclosingElement();
-		hasOneOfClassAnnotations(element, enclosingElement, validatedElements, VALID_ENHANCED_VIEW_SUPPORT_ANNOTATIONS, valid);
+		enclosingElementHasOneOfAnnotations(element, validatedElements, VALID_ENHANCED_VIEW_SUPPORT_ANNOTATIONS, valid);
 	}
 
 	public void enclosingElementHasEnhancedComponentAnnotation(Element element, AnnotationElements validatedElements, IsValid valid) {
-		Element enclosingElement = element.getEnclosingElement();
-		hasOneOfClassAnnotations(element, enclosingElement, validatedElements, VALID_ENHANCED_COMPONENT_ANNOTATIONS, valid);
+		enclosingElementHasOneOfAnnotations(element, validatedElements, VALID_ENHANCED_COMPONENT_ANNOTATIONS, valid);
 	}
 
 	public void enclosingElementHasAndroidAnnotation(Element element, AnnotationElements validatedElements, IsValid valid) {
-		Element enclosingElement = element.getEnclosingElement();
-		hasOneOfClassAnnotations(element, enclosingElement, validatedElements, VALID_ANDROID_ANNOTATIONS, valid);
+		enclosingElementHasOneOfAnnotations(element, validatedElements, VALID_ANDROID_ANNOTATIONS, valid);
 	}
 
-	private void hasClassAnnotation(Element reportElement, Element element, AnnotationElements validatedElements, Class<? extends Annotation> validAnnotation, IsValid valid) {
+	private void hasAnnotation(Element element, Element reportElement, AnnotationElements validatedElements, Class<? extends Annotation> validAnnotation, IsValid valid) {
 		List<Class<? extends Annotation>> validAnnotations = new ArrayList<>();
 		validAnnotations.add(validAnnotation);
-		hasOneOfClassAnnotations(reportElement, element, validatedElements, validAnnotations, valid);
+		hasOneOfAnnotations(element, reportElement, validatedElements, validAnnotations, valid);
 	}
 
-	private void hasOneOfClassAnnotations(Element reportElement, Element element, AnnotationElements validatedElements, List<Class<? extends Annotation>> validAnnotations, IsValid valid) {
+	public void enclosingElementHasOneOfAnnotations(Element element, AnnotationElements validatedElements, List<Class<? extends Annotation>> validAnnotations, IsValid valid) {
+		hasOneOfAnnotations(element, element.getEnclosingElement(), validatedElements, validAnnotations, valid);
+	}
+
+	private void hasOneOfAnnotations(Element reportElement, Element element, AnnotationElements validatedElements, List<Class<? extends Annotation>> validAnnotations, IsValid valid) {
 
 		boolean foundAnnotation = false;
 		for (Class<? extends Annotation> validAnnotation : validAnnotations) {
@@ -289,7 +287,7 @@ public class ValidatorHelper {
 
 		if (!foundAnnotation) {
 			valid.invalidate();
-			annotationHelper.printAnnotationError(reportElement, "%s can only be used in a class annotated with " + getFormattedValidEnhancedBeanAnnotationTypes(validAnnotations) + ".");
+			annotationHelper.printAnnotationError(reportElement, "%s can only be used in a " + element.getKind().toString().toLowerCase() + " annotated with " + getFormattedValidEnhancedBeanAnnotationTypes(validAnnotations) + ".");
 		}
 	}
 
@@ -313,18 +311,7 @@ public class ValidatorHelper {
 	}
 
 	public void enclosingElementHasRestAnnotation(Element element, AnnotationElements validatedElements, IsValid valid) {
-		String error = "can only be used in an interface annotated with";
-		enclosingElementHasAnnotation(Rest.class, element, validatedElements, valid, error);
-	}
-
-	public void enclosingMethodHasAnnotation(Class<? extends Annotation> annotation, Element element, AnnotationElements validatedElements, IsValid valid) {
-		String error = "can only be used with a method annotated with";
-		enclosingElementHasAnnotation(annotation, element, validatedElements, valid, error);
-	}
-
-	public void enclosingElementHasAnnotation(Class<? extends Annotation> annotation, Element element, AnnotationElements validatedElements, IsValid valid, String error) {
-		Element enclosingElement = element.getEnclosingElement();
-		elementHasAnnotation(annotation, enclosingElement, validatedElements, valid, error);
+		enclosingElementHasAnnotation(Rest.class, element, validatedElements, valid);
 	}
 
 	public void elementHasAnnotation(Class<? extends Annotation> annotation, Element element, AnnotationElements validatedElements, IsValid valid, String error) {
@@ -841,7 +828,7 @@ public class ValidatorHelper {
 		}
 	}
 
-	private static final List<Class<? extends Annotation>> REST_ANNOTATION_CLASSES = Arrays.asList(Get.class, Head.class, Options.class, Post.class, Put.class, Delete.class);
+	private static final List<Class<? extends Annotation>> REST_ANNOTATION_CLASSES = asList(Get.class, Head.class, Options.class, Post.class, Put.class, Delete.class);
 
 	public void unannotatedMethodReturnsRestTemplate(TypeElement typeElement, IsValid valid) {
 		List<? extends Element> enclosedElements = typeElement.getEnclosedElements();
