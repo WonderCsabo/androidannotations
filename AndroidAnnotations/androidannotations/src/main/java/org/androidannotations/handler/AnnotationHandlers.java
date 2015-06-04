@@ -125,9 +125,9 @@ public class AnnotationHandlers {
 		add(new HttpsClientHandler(processingEnvironment));
 		add(new HierarchyViewerSupportHandler(processingEnvironment));
 		add(new WindowFeatureHandler(processingEnvironment));
-		new ReceiverHandler(processingEnvironment).register(this);
-		new ReceiverActionHandler(processingEnvironment).register(this);
-		new OnActivityResultHandler(processingEnvironment).register(this);
+		add(new ReceiverHandler(processingEnvironment));
+		add(new ReceiverActionHandler(processingEnvironment));
+		add(new OnActivityResultHandler(processingEnvironment));
 
 		add(new IgnoredWhenDetachedHandler(processingEnvironment));
 		/* After injection methods must be after injections */
@@ -180,6 +180,16 @@ public class AnnotationHandlers {
 	public void add(GeneratingAnnotationHandler<? extends GeneratedClassHolder> annotationHandler) {
 		annotationHandlers.add(annotationHandler);
 		generatingAnnotationHandlers.add(annotationHandler);
+	}
+
+	public void add(HasParameterHandlers<? extends GeneratedClassHolder> annotationHandler) {
+		annotationHandlers.add(annotationHandler);
+		decoratingAnnotationHandlers.add(annotationHandler);
+
+		for (AnnotationHandler<? extends GeneratedClassHolder> parameterHandler : annotationHandler.getParameterHandlers()) {
+			annotationHandlers.add(parameterHandler);
+			decoratingAnnotationHandlers.add(parameterHandler);
+		}
 	}
 
 	public List<AnnotationHandler<? extends GeneratedClassHolder>> get() {

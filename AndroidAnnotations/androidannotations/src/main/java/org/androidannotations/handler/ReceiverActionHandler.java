@@ -22,6 +22,7 @@ import static com.sun.codemodel.JMod.FINAL;
 import static com.sun.codemodel.JMod.PUBLIC;
 import static com.sun.codemodel.JMod.STATIC;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -33,6 +34,7 @@ import org.androidannotations.annotations.ReceiverAction;
 import org.androidannotations.helper.CanonicalNameConstants;
 import org.androidannotations.helper.CaseHelper;
 import org.androidannotations.holder.EReceiverHolder;
+import org.androidannotations.holder.GeneratedClassHolder;
 import org.androidannotations.model.AnnotationElements;
 import org.androidannotations.process.IsValid;
 
@@ -44,7 +46,7 @@ import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JOp;
 import com.sun.codemodel.JVar;
 
-public class ReceiverActionHandler extends BaseAnnotationHandler<EReceiverHolder> {
+public class ReceiverActionHandler extends BaseAnnotationHandler<EReceiverHolder> implements HasParameterHandlers<EReceiverHolder> {
 
 	private ExtraHandler extraHandler;
 
@@ -53,9 +55,9 @@ public class ReceiverActionHandler extends BaseAnnotationHandler<EReceiverHolder
 		extraHandler = new ExtraHandler(processingEnvironment);
 	}
 
-	public void register(AnnotationHandlers annotationHandlers) {
-		annotationHandlers.add(this);
-		annotationHandlers.add(extraHandler);
+	@Override
+	public Iterable<AnnotationHandler<? extends GeneratedClassHolder>> getParameterHandlers() {
+		return Collections.<AnnotationHandler<? extends GeneratedClassHolder>> singleton(extraHandler);
 	}
 
 	@Override

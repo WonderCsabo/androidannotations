@@ -18,6 +18,7 @@ package org.androidannotations.handler;
 import static com.sun.codemodel.JExpr._new;
 import static com.sun.codemodel.JExpr._null;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -29,6 +30,7 @@ import javax.lang.model.type.TypeMirror;
 
 import org.androidannotations.annotations.OnActivityResult;
 import org.androidannotations.helper.CanonicalNameConstants;
+import org.androidannotations.holder.GeneratedClassHolder;
 import org.androidannotations.holder.HasOnActivityResult;
 import org.androidannotations.model.AnnotationElements;
 import org.androidannotations.process.IsValid;
@@ -40,7 +42,7 @@ import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JOp;
 import com.sun.codemodel.JVar;
 
-public class OnActivityResultHandler extends BaseAnnotationHandler<HasOnActivityResult> {
+public class OnActivityResultHandler extends BaseAnnotationHandler<HasOnActivityResult> implements HasParameterHandlers<HasOnActivityResult> {
 
 	private ExtraHandler extraHandler;
 
@@ -49,9 +51,9 @@ public class OnActivityResultHandler extends BaseAnnotationHandler<HasOnActivity
 		extraHandler = new ExtraHandler(processingEnvironment);
 	}
 
-	public void register(AnnotationHandlers annotationHandlers) {
-		annotationHandlers.add(this);
-		annotationHandlers.add(extraHandler);
+	@Override
+	public Iterable<AnnotationHandler<? extends GeneratedClassHolder>> getParameterHandlers() {
+		return Collections.<AnnotationHandler<? extends GeneratedClassHolder>> singleton(extraHandler);
 	}
 
 	@Override
