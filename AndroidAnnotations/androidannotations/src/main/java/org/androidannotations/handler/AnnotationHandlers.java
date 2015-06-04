@@ -27,6 +27,7 @@ import org.androidannotations.handler.rest.DeleteHandler;
 import org.androidannotations.handler.rest.GetHandler;
 import org.androidannotations.handler.rest.HeadHandler;
 import org.androidannotations.handler.rest.OptionsHandler;
+import org.androidannotations.handler.rest.PathParamHandler;
 import org.androidannotations.handler.rest.PostHandler;
 import org.androidannotations.handler.rest.PutHandler;
 import org.androidannotations.handler.rest.RestHandler;
@@ -99,6 +100,7 @@ public class AnnotationHandlers {
 		add(new DeleteHandler(processingEnvironment));
 		add(new HeadHandler(processingEnvironment));
 		add(new OptionsHandler(processingEnvironment));
+		add(new PathParamHandler(processingEnvironment));
 		add(new AppHandler(processingEnvironment));
 		add(new BeanHandler(processingEnvironment));
 		add(new InjectMenuHandler(processingEnvironment));

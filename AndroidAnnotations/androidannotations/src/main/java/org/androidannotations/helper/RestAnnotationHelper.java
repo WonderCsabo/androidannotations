@@ -15,10 +15,15 @@
  */
 package org.androidannotations.helper;
 
+import static org.androidannotations.helper.ModelConstants.VALID_REST_ANNOTATION_CLASSES;
+
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeSet;
@@ -26,6 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -38,6 +44,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
 
 import org.androidannotations.annotations.rest.Accept;
+import org.androidannotations.annotations.rest.PathParam;
 import org.androidannotations.annotations.rest.RequiresAuthentication;
 import org.androidannotations.annotations.rest.RequiresCookie;
 import org.androidannotations.annotations.rest.RequiresCookieInUrl;
@@ -68,9 +75,16 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 
 		List<? extends VariableElement> parameters = element.getParameters();
 
-		List<String> parametersName = new ArrayList<>();
+		Set<String> parametersName = new HashSet<String>();
 		for (VariableElement parameter : parameters) {
-			parametersName.add(parameter.getSimpleName().toString());
+			String nameToAdd = getUrlVariableCorrespondingTo(parameter);
+
+			if (parametersName.contains(nameToAdd)) {
+				printAnnotationError(element, "%s has multiple method parameters which correspond to the same url variable");
+				valid.invalidate();
+				return;
+			}
+			parametersName.add(nameToAdd);
 		}
 
 		String[] cookiesToUrl = requiredUrlCookies(element);
@@ -119,13 +133,44 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 		}
 	}
 
+	public void urlVariableNameExistsInEnclosingAnnotation(Element element, IsValid valid) {
+		Set<String> validRestMethodAnnotationNames = new HashSet<String>();
+
+		for (Class<? extends Annotation> validAnnotation : VALID_REST_ANNOTATION_CLASSES) {
+			validRestMethodAnnotationNames.add(validAnnotation.getCanonicalName());
+		}
+
+		String url = null;
+
+		for (AnnotationMirror annotationMirror : element.getEnclosingElement().getAnnotationMirrors()) {
+			if (validRestMethodAnnotationNames.contains(annotationMirror.getAnnotationType().toString())) {
+				url = extractAnnotationParameter(element.getEnclosingElement(), annotationMirror.getAnnotationType().toString(), "value");
+				break;
+			}
+		}
+
+		Set<String> urlVariableNames = extractUrlVariableNames(url);
+
+		String annotationValue = extractAnnotationValueParameter(element);
+		String expectedUrlVariableName = !annotationValue.equals("") ? annotationValue : element.getSimpleName().toString();
+
+		if (!urlVariableNames.contains(expectedUrlVariableName)) {
+			valid.invalidate();
+			printAnnotationError(element, "%s annotated parameter is has no corresponding url variable");
+		}
+	}
+
 	/** Captures URI template variable names. */
 	private static final Pattern NAMES_PATTERN = Pattern.compile("\\{([^/]+?)\\}");
 
 	public Set<String> extractUrlVariableNames(ExecutableElement element) {
-
-		Set<String> variableNames = new HashSet<>();
 		String uriTemplate = extractAnnotationValueParameter(element);
+
+		return extractUrlVariableNames(uriTemplate);
+	}
+
+	public Set<String> extractUrlVariableNames(String uriTemplate) {
+		Set<String> variableNames = new HashSet<>();
 
 		boolean hasValueInAnnotation = uriTemplate != null;
 		if (hasValueInAnnotation) {
@@ -139,6 +184,11 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 	}
 
 	public JVar declareUrlVariables(ExecutableElement element, RestHolder holder, JBlock methodBody, SortedMap<String, JVar> methodParams) {
+		Map<String, String> urlNameToElementName = new HashMap<String, String>();
+		for (VariableElement variableElement : element.getParameters()) {
+			urlNameToElementName.put(getUrlVariableCorrespondingTo(variableElement), variableElement.getSimpleName().toString());
+		}
+
 		Set<String> urlVariables = extractUrlVariableNames(element);
 
 		// cookies in url?
@@ -153,10 +203,11 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 		if (!urlVariables.isEmpty()) {
 			JVar hashMapVar = methodBody.decl(hashMapClass, "urlVariables", JExpr._new(hashMapClass));
 			for (String urlVariable : urlVariables) {
-				JVar methodParam = methodParams.get(urlVariable);
+				String elementName = urlNameToElementName.get(urlVariable);
+				JVar methodParam = methodParams.get(elementName);
 				if (methodParam != null) {
 					methodBody.invoke(hashMapVar, "put").arg(urlVariable).arg(methodParam);
-					methodParams.remove(urlVariable);
+					methodParams.remove(elementName);
 				} else {
 					// cookie from url
 					JInvocation cookieValue = holder.getAvailableCookiesField().invoke("get").arg(JExpr.lit(urlVariable));
@@ -295,12 +346,25 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 
 	public JVar getEntitySentToServer(ExecutableElement element, SortedMap<String, JVar> params) {
 		Set<String> urlVariables = extractUrlVariableNames(element);
-		for (String paramName : params.keySet()) {
-			if (!urlVariables.contains(paramName)) {
-				return params.get(paramName);
+		for (VariableElement parameter : element.getParameters()) {
+			String parametername = getUrlVariableCorrespondingTo(parameter);
+
+			if (!urlVariables.contains(parametername)) {
+				return params.get(parametername);
 			}
 		}
 		return null;
+	}
+
+	private String getUrlVariableCorrespondingTo(VariableElement parameter) {
+		PathParam pathParam = parameter.getAnnotation(PathParam.class);
+		String parametername;
+		if (pathParam != null && !pathParam.value().equals("")) {
+			parametername = pathParam.value();
+		} else {
+			parametername = parameter.getSimpleName().toString();
+		}
+		return parametername;
 	}
 
 	public JExpression declareHttpEntity(ProcessHolder holder, JBlock body, JVar entitySentToServer, JVar httpHeaders) {

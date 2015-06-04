@@ -33,6 +33,12 @@ import org.androidannotations.annotations.EReceiver;
 import org.androidannotations.annotations.EService;
 import org.androidannotations.annotations.EView;
 import org.androidannotations.annotations.EViewGroup;
+import org.androidannotations.annotations.rest.Delete;
+import org.androidannotations.annotations.rest.Get;
+import org.androidannotations.annotations.rest.Head;
+import org.androidannotations.annotations.rest.Options;
+import org.androidannotations.annotations.rest.Post;
+import org.androidannotations.annotations.rest.Put;
 import org.androidannotations.annotations.rest.Rest;
 import org.androidannotations.annotations.sharedpreferences.SharedPref;
 
@@ -46,6 +52,9 @@ public abstract class ModelConstants {
 	public static final List<Class<? extends Annotation>> VALID_ENHANCED_COMPONENT_ANNOTATIONS = asList(EApplication.class, EActivity.class, EViewGroup.class, EView.class, EBean.class, EService.class, EIntentService.class, EReceiver.class, EProvider.class, EFragment.class);
 
 	public static final List<Class<? extends Annotation>> VALID_ANDROID_ANNOTATIONS = asList(EApplication.class, EActivity.class, EViewGroup.class, EView.class, EBean.class, EService.class, EReceiver.class, EProvider.class, EFragment.class, SharedPref.class, Rest.class);
+
+	@SuppressWarnings("unchecked")
+	public static final List<Class<? extends Annotation>> VALID_REST_ANNOTATION_CLASSES = asList(Get.class, Head.class, Options.class, Post.class, Put.class, Delete.class);
 
 	private ModelConstants() {
 	}

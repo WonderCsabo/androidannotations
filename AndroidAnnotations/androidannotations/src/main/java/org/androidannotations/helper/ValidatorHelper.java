@@ -29,6 +29,7 @@ import static org.androidannotations.helper.CanonicalNameConstants.WAKELOCK_PERM
 import static org.androidannotations.helper.ModelConstants.VALID_ANDROID_ANNOTATIONS;
 import static org.androidannotations.helper.ModelConstants.VALID_ENHANCED_COMPONENT_ANNOTATIONS;
 import static org.androidannotations.helper.ModelConstants.VALID_ENHANCED_VIEW_SUPPORT_ANNOTATIONS;
+import static org.androidannotations.helper.ModelConstants.VALID_REST_ANNOTATION_CLASSES;
 import static org.androidannotations.helper.ModelConstants.classSuffix;
 
 import java.lang.annotation.Annotation;
@@ -71,12 +72,6 @@ import org.androidannotations.annotations.UiThread.Propagation;
 import org.androidannotations.annotations.ViewById;
 import org.androidannotations.annotations.WakeLock;
 import org.androidannotations.annotations.WakeLock.Level;
-import org.androidannotations.annotations.rest.Delete;
-import org.androidannotations.annotations.rest.Get;
-import org.androidannotations.annotations.rest.Head;
-import org.androidannotations.annotations.rest.Options;
-import org.androidannotations.annotations.rest.Post;
-import org.androidannotations.annotations.rest.Put;
 import org.androidannotations.annotations.rest.Rest;
 import org.androidannotations.annotations.sharedpreferences.DefaultBoolean;
 import org.androidannotations.annotations.sharedpreferences.DefaultFloat;
@@ -312,6 +307,10 @@ public class ValidatorHelper {
 
 	public void enclosingElementHasRestAnnotation(Element element, AnnotationElements validatedElements, IsValid valid) {
 		enclosingElementHasAnnotation(Rest.class, element, validatedElements, valid);
+	}
+
+	public void enclosingElementHasOnOfRestMethodAnnotations(Element element, AnnotationElements validatedElements, IsValid valid) {
+		enclosingElementHasOneOfAnnotations(element, validatedElements, VALID_REST_ANNOTATION_CLASSES, valid);
 	}
 
 	public void elementHasAnnotation(Class<? extends Annotation> annotation, Element element, AnnotationElements validatedElements, IsValid valid, String error) {
@@ -828,8 +827,6 @@ public class ValidatorHelper {
 		}
 	}
 
-	private static final List<Class<? extends Annotation>> REST_ANNOTATION_CLASSES = asList(Get.class, Head.class, Options.class, Post.class, Put.class, Delete.class);
-
 	public void unannotatedMethodReturnsRestTemplate(TypeElement typeElement, IsValid valid) {
 		List<? extends Element> enclosedElements = typeElement.getEnclosedElements();
 		boolean foundGetRestTemplateMethod = false;
@@ -848,7 +845,7 @@ public class ValidatorHelper {
 			} else {
 
 				boolean hasRestAnnotation = false;
-				for (Class<? extends Annotation> annotationClass : REST_ANNOTATION_CLASSES) {
+				for (Class<? extends Annotation> annotationClass : VALID_REST_ANNOTATION_CLASSES) {
 					if (enclosedElement.getAnnotation(annotationClass) != null) {
 						hasRestAnnotation = true;
 						break;
