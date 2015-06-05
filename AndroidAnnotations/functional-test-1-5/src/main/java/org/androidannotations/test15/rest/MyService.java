@@ -24,6 +24,7 @@ import org.androidannotations.annotations.rest.Delete;
 import org.androidannotations.annotations.rest.Get;
 import org.androidannotations.annotations.rest.Head;
 import org.androidannotations.annotations.rest.Options;
+import org.androidannotations.annotations.rest.PathParam;
 import org.androidannotations.annotations.rest.Post;
 import org.androidannotations.annotations.rest.Put;
 import org.androidannotations.annotations.rest.RequiresAuthentication;
@@ -146,6 +147,12 @@ public interface MyService {
 
 	@Post("/events/")
 	ResponseEntity<Event> addEvent2(Event event);
+
+	@Post("/events/{date}")
+	@RequiresHeader("SomeFancyHeader")
+	@RequiresCookie("myCookie")
+	@RequiresCookieInUrl("myCookieInUrl")
+	void addEventWithPathParameters(@PathParam("date") String pathParam, @Post.Param String parameter);
 
 	/**
 	 * Output different then input
