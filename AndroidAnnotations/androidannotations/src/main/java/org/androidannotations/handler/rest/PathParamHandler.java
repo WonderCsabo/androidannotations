@@ -41,6 +41,8 @@ public class PathParamHandler extends BaseAnnotationHandler<GeneratedClassHolder
 
 	@Override
 	protected void validate(Element element, AnnotationElements validatedElements, IsValid valid) {
+		validatorHelper.doesNotHaveFieldAnnotation(element, validatedElements, valid);
+
 		validatorHelper.enclosingElementHasOnOfRestMethodAnnotations(element, validatedElements, valid);
 
 		if (valid.isValid()) {

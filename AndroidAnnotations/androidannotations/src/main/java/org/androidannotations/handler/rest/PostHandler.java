@@ -16,6 +16,9 @@
 package org.androidannotations.handler.rest;
 
 import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.SortedMap;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -30,6 +33,12 @@ import org.androidannotations.holder.GeneratedClassHolder;
 import org.androidannotations.holder.RestHolder;
 import org.androidannotations.model.AnnotationElements;
 import org.androidannotations.process.IsValid;
+
+import com.sun.codemodel.JBlock;
+import com.sun.codemodel.JClass;
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JVar;
 
 public class PostHandler extends RestMethodHandler implements HasParameterHandlers<RestHolder> {
 
@@ -51,13 +60,34 @@ public class PostHandler extends RestMethodHandler implements HasParameterHandle
 
 		validatorHelper.doesNotReturnPrimitive((ExecutableElement) element, valid);
 
-		restAnnotationHelper.urlVariableNamesExistInParametersAndHasOnlyOneMoreParameter((ExecutableElement) element, valid);
+		restAnnotationHelper.urlVariableNamesExistInParametersAndHasOnlyOneEntityParameterOrOneOrMorePostParameter((ExecutableElement) element, valid);
 	}
 
 	@Override
 	protected String getUrlSuffix(Element element) {
 		Post annotation = element.getAnnotation(Post.class);
 		return annotation.value();
+	}
+
+	@Override
+	protected JExpression getRequestEntity(ExecutableElement element, RestHolder holder, JBlock methodBody, SortedMap<String, JVar> params) {
+		JVar httpHeaders = restAnnotationHelper.declareHttpHeaders(element, holder, methodBody);
+		JVar entitySentToServer = restAnnotationHelper.getEntitySentToServer(element, params);
+
+		if (entitySentToServer == null) {
+			Map<String, String> postParameters = restAnnotationHelper.extractPostParameters(element);
+
+			if (postParameters != null) {
+				JClass hashMapClass = holder.classes().LINKED_MULTI_VALUE_MAP.narrow(String.class, Object.class);
+				entitySentToServer = methodBody.decl(hashMapClass, "postParameters", JExpr._new(hashMapClass));
+
+				for (Entry<String, String> postParameter : postParameters.entrySet()) {
+					methodBody.add(entitySentToServer.invoke("add").arg(JExpr.lit(postParameter.getKey())).arg(params.get(postParameter.getValue())));
+				}
+			}
+		}
+
+		return restAnnotationHelper.declareHttpEntity(processHolder, methodBody, entitySentToServer, httpHeaders);
 	}
 
 	public class FieldHandler extends BaseAnnotationHandler<GeneratedClassHolder> {
@@ -74,6 +104,10 @@ public class PostHandler extends RestMethodHandler implements HasParameterHandle
 		@Override
 		protected void validate(Element element, AnnotationElements validatedElements, IsValid valid) {
 			validatorHelper.enclosingElementHasAnnotation(Post.class, element, validatedElements, valid);
+
+			validatorHelper.doesNotHavePathParamAnnotation(element, validatedElements, valid);
+
+			validatorHelper.restInterfaceHasFormConverter(element, validatedElements, valid);
 		}
 
 	}

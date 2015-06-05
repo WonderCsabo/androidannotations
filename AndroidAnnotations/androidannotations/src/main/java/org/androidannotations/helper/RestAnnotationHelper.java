@@ -44,6 +44,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
 
 import org.androidannotations.annotations.rest.Accept;
+import org.androidannotations.annotations.rest.Field;
 import org.androidannotations.annotations.rest.PathParam;
 import org.androidannotations.annotations.rest.RequiresAuthentication;
 import org.androidannotations.annotations.rest.RequiresCookie;
@@ -77,6 +78,10 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 
 		Set<String> parametersName = new HashSet<String>();
 		for (VariableElement parameter : parameters) {
+			if (parameter.getAnnotation(Field.class) != null) {
+				continue;
+			}
+
 			String nameToAdd = getUrlVariableCorrespondingTo(parameter);
 
 			if (parametersName.contains(nameToAdd)) {
@@ -133,6 +138,56 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 		}
 	}
 
+	public void urlVariableNamesExistInParametersAndHasOnlyOneEntityParameterOrOneOrMorePostParameter(ExecutableElement element, IsValid valid) {
+		if (valid.isValid()) {
+			Set<String> variableNames = extractUrlVariableNames(element);
+			urlVariableNamesExistInParameters(element, variableNames, valid);
+			if (valid.isValid()) {
+				List<? extends VariableElement> parameters = element.getParameters();
+
+				Map<String, String> postParameters = extractPostParameters(element);
+
+				if (postParameters == null) {
+					printAnnotationError(element, "%s annotated method has multiple form parameters with the same name");
+					valid.invalidate();
+					return;
+				}
+
+				if (!postParameters.isEmpty() && postParameters.size() + variableNames.size() < parameters.size()) {
+					printAnnotationError(element, "%s method cannot have both entity parameter and @Field annotated parameters");
+					valid.invalidate();
+					return;
+				}
+
+				if (postParameters.isEmpty() && parameters.size() > variableNames.size() + 1) {
+					valid.invalidate();
+					printAnnotationError(element, "%s annotated method has more than one entity parameter");
+				}
+			}
+		}
+	}
+
+	/**
+	 * Returns the post parameter name to method parameter name mapping, or null
+	 * if duplicate names found.
+	 */
+	public Map<String, String> extractPostParameters(ExecutableElement element) {
+		Map<String, String> formNameToElementName = new HashMap<String, String>();
+
+		for (VariableElement parameter : element.getParameters()) {
+			Field annotation = parameter.getAnnotation(Field.class);
+			if (annotation != null) {
+				String elementName = !annotation.value().equals("") ? annotation.value() : parameter.getSimpleName().toString();
+				if (formNameToElementName.containsKey(elementName)) {
+					return null;
+				}
+
+				formNameToElementName.put(elementName, parameter.getSimpleName().toString());
+			}
+		}
+		return formNameToElementName;
+	}
+
 	public void urlVariableNameExistsInEnclosingAnnotation(Element element, IsValid valid) {
 		Set<String> validRestMethodAnnotationNames = new HashSet<String>();
 
@@ -186,7 +241,9 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 	public JVar declareUrlVariables(ExecutableElement element, RestHolder holder, JBlock methodBody, SortedMap<String, JVar> methodParams) {
 		Map<String, String> urlNameToElementName = new HashMap<String, String>();
 		for (VariableElement variableElement : element.getParameters()) {
-			urlNameToElementName.put(getUrlVariableCorrespondingTo(variableElement), variableElement.getSimpleName().toString());
+			if (variableElement.getAnnotation(Field.class) == null) {
+				urlNameToElementName.put(getUrlVariableCorrespondingTo(variableElement), variableElement.getSimpleName().toString());
+			}
 		}
 
 		Set<String> urlVariables = extractUrlVariableNames(element);
@@ -204,8 +261,8 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 			JVar hashMapVar = methodBody.decl(hashMapClass, "urlVariables", JExpr._new(hashMapClass));
 			for (String urlVariable : urlVariables) {
 				String elementName = urlNameToElementName.get(urlVariable);
-				JVar methodParam = methodParams.get(elementName);
-				if (methodParam != null) {
+				if (elementName != null) {
+					JVar methodParam = methodParams.get(elementName);
 					methodBody.invoke(hashMapVar, "put").arg(urlVariable).arg(methodParam);
 					methodParams.remove(elementName);
 				} else {
@@ -347,10 +404,12 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 	public JVar getEntitySentToServer(ExecutableElement element, SortedMap<String, JVar> params) {
 		Set<String> urlVariables = extractUrlVariableNames(element);
 		for (VariableElement parameter : element.getParameters()) {
-			String parametername = getUrlVariableCorrespondingTo(parameter);
+			if (parameter.getAnnotation(Field.class) == null) {
+				String parametername = getUrlVariableCorrespondingTo(parameter);
 
-			if (!urlVariables.contains(parametername)) {
-				return params.get(parametername);
+				if (!urlVariables.contains(parametername)) {
+					return params.get(parametername);
+				}
 			}
 		}
 		return null;

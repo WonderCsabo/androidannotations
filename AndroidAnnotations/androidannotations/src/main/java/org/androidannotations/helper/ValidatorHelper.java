@@ -23,6 +23,7 @@ import static org.androidannotations.helper.AndroidConstants.LOG_VERBOSE;
 import static org.androidannotations.helper.AndroidConstants.LOG_WARN;
 import static org.androidannotations.helper.CanonicalNameConstants.CLIENT_HTTP_REQUEST_FACTORY;
 import static org.androidannotations.helper.CanonicalNameConstants.CLIENT_HTTP_REQUEST_INTERCEPTOR;
+import static org.androidannotations.helper.CanonicalNameConstants.FORM_HTTP_MESSAGE_CONVERTER;
 import static org.androidannotations.helper.CanonicalNameConstants.HTTP_MESSAGE_CONVERTER;
 import static org.androidannotations.helper.CanonicalNameConstants.INTERNET_PERMISSION;
 import static org.androidannotations.helper.CanonicalNameConstants.WAKELOCK_PERMISSION;
@@ -72,6 +73,8 @@ import org.androidannotations.annotations.UiThread.Propagation;
 import org.androidannotations.annotations.ViewById;
 import org.androidannotations.annotations.WakeLock;
 import org.androidannotations.annotations.WakeLock.Level;
+import org.androidannotations.annotations.rest.Field;
+import org.androidannotations.annotations.rest.PathParam;
 import org.androidannotations.annotations.rest.Rest;
 import org.androidannotations.annotations.sharedpreferences.DefaultBoolean;
 import org.androidannotations.annotations.sharedpreferences.DefaultFloat;
@@ -271,6 +274,18 @@ public class ValidatorHelper {
 	}
 
 	private void hasOneOfAnnotations(Element reportElement, Element element, AnnotationElements validatedElements, List<Class<? extends Annotation>> validAnnotations, IsValid valid) {
+		checkAnnotations(reportElement, element, validatedElements, validAnnotations, true, valid);
+	}
+
+	public void doesNotHaveOneOfAnnotations(Element element, AnnotationElements validatedElements, List<Class<? extends Annotation>> validAnnotations, IsValid valid) {
+		checkAnnotations(element, element, validatedElements, validAnnotations, false, valid);
+	}
+
+	public void doesNotHaveAnnotation(Element element, AnnotationElements validatedElements, Class<? extends Annotation> annotation, IsValid valid) {
+		doesNotHaveOneOfAnnotations(element, validatedElements, Collections.<Class<? extends Annotation>> singletonList(annotation), valid);
+	}
+
+	private void checkAnnotations(Element reportElement, Element element, AnnotationElements validatedElements, List<Class<? extends Annotation>> validAnnotations, boolean shouldFind, IsValid valid) {
 
 		boolean foundAnnotation = false;
 		for (Class<? extends Annotation> validAnnotation : validAnnotations) {
@@ -280,9 +295,11 @@ public class ValidatorHelper {
 			}
 		}
 
-		if (!foundAnnotation) {
+		if (shouldFind != foundAnnotation) {
 			valid.invalidate();
-			annotationHelper.printAnnotationError(reportElement, "%s can only be used in a " + element.getKind().toString().toLowerCase() + " annotated with " + getFormattedValidEnhancedBeanAnnotationTypes(validAnnotations) + ".");
+			String not = shouldFind ? "" : " not";
+
+			annotationHelper.printAnnotationError(reportElement, "%s can only be used in a " + element.getKind().toString().toLowerCase() + not + " annotated with " + getFormattedValidEnhancedBeanAnnotationTypes(validAnnotations) + ".");
 		}
 	}
 
@@ -414,6 +431,41 @@ public class ValidatorHelper {
 		if (executableElement.getThrownTypes().size() > 0) {
 			valid.invalidate();
 			annotationHelper.printAnnotationError(element, "%s annotated methods should not declare throwing any exception");
+		}
+	}
+
+	public void doesNotHavePathParamAnnotation(Element element, AnnotationElements validatedElements, IsValid valid) {
+		doesNotHaveAnnotation(element, validatedElements, PathParam.class, valid);
+	}
+
+	public void doesNotHaveFieldAnnotation(Element element, AnnotationElements validatedElements, IsValid valid) {
+		doesNotHaveAnnotation(element, validatedElements, Field.class, valid);
+	}
+
+	public void restInterfaceHasFormConverter(Element element, AnnotationElements validatedElements, IsValid valid) {
+		Element restInterface = element.getEnclosingElement().getEnclosingElement();
+
+		if (restInterface.getAnnotation(Rest.class) == null) {
+			return;
+		}
+
+		List<DeclaredType> converters = annotationHelper.extractAnnotationClassArrayParameter(restInterface, Rest.class.getCanonicalName(), "converters");
+
+		boolean formConverterFound = false;
+
+		TypeElement formConverter = annotationHelper.getElementUtils().getTypeElement(FORM_HTTP_MESSAGE_CONVERTER);
+
+		for (DeclaredType converter : converters) {
+			if (formConverter != null && annotationHelper.isSubtype(formConverter.asType(), converter)) {
+				formConverterFound = true;
+				break;
+			}
+		}
+
+		if (!formConverterFound) {
+			annotationHelper.printAnnotationError(element, "%s annotated method parameter must be in a @Rest annotated interface which uses at least one " //
+					+ FORM_HTTP_MESSAGE_CONVERTER + " (or subtype)");
+			valid.invalidate();
 		}
 	}
 
