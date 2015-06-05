@@ -21,6 +21,7 @@ import java.util.Set;
 
 import org.androidannotations.annotations.rest.Accept;
 import org.androidannotations.annotations.rest.Delete;
+import org.androidannotations.annotations.rest.Field;
 import org.androidannotations.annotations.rest.Get;
 import org.androidannotations.annotations.rest.Head;
 import org.androidannotations.annotations.rest.Options;
@@ -38,14 +39,15 @@ import org.springframework.http.HttpAuthentication;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 // if defined, the rootUrl will be added as a prefix to every request
-@Rest(rootUrl = "http://company.com/ajax/services", converters = { MappingJacksonHttpMessageConverter.class, EBeanConverter.class },
-		interceptors = { RequestInterceptor.class, EBeanInterceptor.class },
-		requestFactory = MyRequestFactory.class)
+@Rest(rootUrl = "http://company.com/ajax/services", converters = { MappingJacksonHttpMessageConverter.class, EBeanConverter.class, FormHttpMessageConverter.class }, //
+interceptors = { RequestInterceptor.class, EBeanInterceptor.class }, //
+requestFactory = MyRequestFactory.class)
 public interface MyService {
 
 	// *** GET ***
@@ -152,7 +154,13 @@ public interface MyService {
 	@RequiresHeader("SomeFancyHeader")
 	@RequiresCookie("myCookie")
 	@RequiresCookieInUrl("myCookieInUrl")
-	void addEventWithPathParameters(@PathParam("date") String pathParam, @Post.Param String parameter);
+	void addEventWithParameters(String date, @Field String parameter, @Field String otherParameter);
+
+	@Post("/events/{date}")
+	@RequiresHeader("SomeFancyHeader")
+	@RequiresCookie("myCookie")
+	@RequiresCookieInUrl("myCookieInUrl")
+	void addEventWithPathParameters(@PathParam("date") String pathParam, @Field String parameter);
 
 	/**
 	 * Output different then input
