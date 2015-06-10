@@ -31,7 +31,7 @@ import com.sun.codemodel.JMod;
 import com.sun.codemodel.JSwitch;
 import com.sun.codemodel.JVar;
 
-public class OnActivityResultHolder extends GeneratedClassHolderWrapper<EComponentHolder> {
+public class OnActivityResultDelegate extends GeneratedClassHolderDelegate<EComponentHolder> {
 
 	private JMethod method;
 	private JBlock afterSuperBlock;
@@ -41,7 +41,7 @@ public class OnActivityResultHolder extends GeneratedClassHolderWrapper<ECompone
 	private JVar resultCodeParam;
 	private Map<Integer, JBlock> caseBlocks = new HashMap<Integer, JBlock>();
 
-	public OnActivityResultHolder(EComponentHolder holder) {
+	public OnActivityResultDelegate(EComponentHolder holder) {
 		super(holder);
 	}
 
@@ -116,13 +116,5 @@ public class OnActivityResultHolder extends GeneratedClassHolderWrapper<ECompone
 		JBlock body = method.body();
 		body.invoke(_super(), method).arg(requestCodeParam).arg(resultCodeParam).arg(dataParam);
 		afterSuperBlock = body.block();
-	}
-
-	private JCodeModel codeModel() {
-		return holder.codeModel();
-	}
-
-	public ProcessHolder.Classes classes() {
-		return holder.classes();
 	}
 }
