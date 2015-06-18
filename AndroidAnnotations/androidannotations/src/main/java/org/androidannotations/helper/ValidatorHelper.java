@@ -74,6 +74,7 @@ import org.androidannotations.annotations.ViewById;
 import org.androidannotations.annotations.WakeLock;
 import org.androidannotations.annotations.WakeLock.Level;
 import org.androidannotations.annotations.rest.Field;
+import org.androidannotations.annotations.rest.Part;
 import org.androidannotations.annotations.rest.PathParam;
 import org.androidannotations.annotations.rest.Rest;
 import org.androidannotations.annotations.sharedpreferences.DefaultBoolean;
@@ -440,6 +441,10 @@ public class ValidatorHelper {
 
 	public void doesNotHaveFieldAnnotation(Element element, AnnotationElements validatedElements, IsValid valid) {
 		doesNotHaveAnnotation(element, validatedElements, Field.class, valid);
+	}
+
+	public void doesNotHavePartAnnotation(Element element, AnnotationElements validatedElements, IsValid valid) {
+		doesNotHaveAnnotation(element, validatedElements, Part.class, valid);
 	}
 
 	public void restInterfaceHasFormConverter(Element element, AnnotationElements validatedElements, IsValid valid) {

@@ -15,7 +15,7 @@
  */
 package org.androidannotations.handler.rest;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
@@ -25,6 +25,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 
 import org.androidannotations.annotations.rest.Field;
+import org.androidannotations.annotations.rest.Part;
 import org.androidannotations.annotations.rest.Post;
 import org.androidannotations.handler.AnnotationHandler;
 import org.androidannotations.handler.BaseAnnotationHandler;
@@ -43,15 +44,17 @@ import com.sun.codemodel.JVar;
 public class PostHandler extends RestMethodHandler implements HasParameterHandlers<RestHolder> {
 
 	private FieldHandler fieldHandler;
+	private PartHandler partHandler;
 
 	public PostHandler(ProcessingEnvironment processingEnvironment) {
 		super(Post.class, processingEnvironment);
 		fieldHandler = new FieldHandler(processingEnvironment);
+		partHandler = new PartHandler(processingEnvironment);
 	}
 
 	@Override
 	public Iterable<AnnotationHandler<? extends GeneratedClassHolder>> getParameterHandlers() {
-		return Collections.<AnnotationHandler<? extends GeneratedClassHolder>> singleton(fieldHandler);
+		return Arrays.<AnnotationHandler<? extends GeneratedClassHolder>> asList(fieldHandler, partHandler);
 	}
 
 	@Override
@@ -61,6 +64,8 @@ public class PostHandler extends RestMethodHandler implements HasParameterHandle
 		validatorHelper.doesNotReturnPrimitive((ExecutableElement) element, valid);
 
 		restAnnotationHelper.urlVariableNamesExistInParametersAndHasOnlyOneEntityParameterOrOneOrMorePostParameter((ExecutableElement) element, valid);
+
+		restAnnotationHelper.doesNotMixPartAndFieldAnnotations((ExecutableElement) element, valid);
 	}
 
 	@Override
@@ -90,10 +95,10 @@ public class PostHandler extends RestMethodHandler implements HasParameterHandle
 		return restAnnotationHelper.declareHttpEntity(processHolder, methodBody, entitySentToServer, httpHeaders);
 	}
 
-	public class FieldHandler extends BaseAnnotationHandler<GeneratedClassHolder> {
+	private abstract class AbstractPostParamHandler extends BaseAnnotationHandler<GeneratedClassHolder> {
 
-		public FieldHandler(ProcessingEnvironment processingEnvironment) {
-			super(Field.class, processingEnvironment);
+		public AbstractPostParamHandler(Class<?> targetClass, ProcessingEnvironment processingEnvironment) {
+			super(targetClass, processingEnvironment);
 		}
 
 		@Override
@@ -109,6 +114,33 @@ public class PostHandler extends RestMethodHandler implements HasParameterHandle
 
 			validatorHelper.restInterfaceHasFormConverter(element, validatedElements, valid);
 		}
+	}
 
+	public class FieldHandler extends AbstractPostParamHandler {
+
+		public FieldHandler(ProcessingEnvironment processingEnvironment) {
+			super(Field.class, processingEnvironment);
+		}
+
+		@Override
+		protected void validate(Element element, AnnotationElements validatedElements, IsValid valid) {
+			super.validate(element, validatedElements, valid);
+
+			validatorHelper.doesNotHavePartAnnotation(element, validatedElements, valid);
+		}
+	}
+
+	public class PartHandler extends AbstractPostParamHandler {
+
+		public PartHandler(ProcessingEnvironment processingEnvironment) {
+			super(Part.class, processingEnvironment);
+		}
+
+		@Override
+		protected void validate(Element element, AnnotationElements validatedElements, IsValid valid) {
+			super.validate(element, validatedElements, valid);
+
+			validatorHelper.doesNotHaveFieldAnnotation(element, validatedElements, valid);
+		}
 	}
 }
