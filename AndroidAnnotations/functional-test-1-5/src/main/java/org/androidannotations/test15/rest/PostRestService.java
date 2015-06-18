@@ -16,6 +16,7 @@
 package org.androidannotations.test15.rest;
 
 import org.androidannotations.annotations.rest.Field;
+import org.androidannotations.annotations.rest.Part;
 import org.androidannotations.annotations.rest.Post;
 import org.androidannotations.annotations.rest.Rest;
 import org.androidannotations.api.rest.RestClientSupport;
@@ -26,4 +27,7 @@ public interface PostRestService extends RestClientSupport {
 
 	@Post("/")
 	void post(@Field("otherParam") String postParam, @Field("postParam") String otherParam, @Field String thirdParam);
+
+	@Post("/")
+	void multipart(@Part("otherParam") String postParam, @Part("postParam") String otherParam, @Part String thirdParam);
 }

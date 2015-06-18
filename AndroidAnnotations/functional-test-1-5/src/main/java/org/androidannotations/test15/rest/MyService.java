@@ -25,6 +25,7 @@ import org.androidannotations.annotations.rest.Field;
 import org.androidannotations.annotations.rest.Get;
 import org.androidannotations.annotations.rest.Head;
 import org.androidannotations.annotations.rest.Options;
+import org.androidannotations.annotations.rest.Part;
 import org.androidannotations.annotations.rest.PathParam;
 import org.androidannotations.annotations.rest.Post;
 import org.androidannotations.annotations.rest.Put;
@@ -155,6 +156,12 @@ public interface MyService {
 	@RequiresCookie("myCookie")
 	@RequiresCookieInUrl("myCookieInUrl")
 	void addEventWithParameters(String date, @Field String parameter, @Field String otherParameter);
+
+	@Post("/events/{date}")
+	@RequiresHeader("SomeFancyHeader")
+	@RequiresCookie("myCookie")
+	@RequiresCookieInUrl("myCookieInUrl")
+	void addEventWithParts(String date, @Part String parameter, @Part String otherParameter);
 
 	@Post("/events/{date}")
 	@RequiresHeader("SomeFancyHeader")
