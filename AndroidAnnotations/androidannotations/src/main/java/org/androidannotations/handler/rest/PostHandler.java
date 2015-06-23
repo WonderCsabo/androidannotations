@@ -112,6 +112,8 @@ public class PostHandler extends RestMethodHandler implements HasParameterHandle
 
 			validatorHelper.doesNotHavePathParamAnnotation(element, validatedElements, valid);
 
+			validatorHelper.doesNotHaveQueryParamAnnotation(element, validatedElements, valid);
+
 			validatorHelper.restInterfaceHasFormConverter(element, validatedElements, valid);
 		}
 	}

@@ -18,6 +18,7 @@ package org.androidannotations.test15.rest;
 import org.androidannotations.annotations.rest.Field;
 import org.androidannotations.annotations.rest.Part;
 import org.androidannotations.annotations.rest.Post;
+import org.androidannotations.annotations.rest.QueryParam;
 import org.androidannotations.annotations.rest.Rest;
 import org.androidannotations.api.rest.RestClientSupport;
 import org.springframework.http.converter.FormHttpMessageConverter;
@@ -26,7 +27,7 @@ import org.springframework.http.converter.FormHttpMessageConverter;
 public interface PostRestService extends RestClientSupport {
 
 	@Post("/")
-	void post(@Field("otherParam") String postParam, @Field("postParam") String otherParam, @Field String thirdParam);
+	void post(@Field("otherParam") String postParam, @Field("postParam") String otherParam, @Field String thirdParam, @QueryParam String param, @QueryParam String param2);
 
 	@Post("/")
 	void multipart(@Part("otherParam") String postParam, @Part("postParam") String otherParam, @Part String thirdParam);

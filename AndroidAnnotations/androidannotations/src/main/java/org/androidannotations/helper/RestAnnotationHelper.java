@@ -48,6 +48,8 @@ import org.androidannotations.annotations.rest.Accept;
 import org.androidannotations.annotations.rest.Field;
 import org.androidannotations.annotations.rest.Part;
 import org.androidannotations.annotations.rest.PathParam;
+import org.androidannotations.annotations.rest.QueryMap;
+import org.androidannotations.annotations.rest.QueryParam;
 import org.androidannotations.annotations.rest.RequiresAuthentication;
 import org.androidannotations.annotations.rest.RequiresCookie;
 import org.androidannotations.annotations.rest.RequiresCookieInUrl;
@@ -117,7 +119,9 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 			if (valid.isValid()) {
 				List<? extends VariableElement> parameters = element.getParameters();
 
-				if (parameters.size() > variableNames.size()) {
+				List<Element> queryElements = extractQueryElements(element);
+
+				if (parameters.size() > variableNames.size() + queryElements.size()) {
 					valid.invalidate();
 					printAnnotationError(element, "%s annotated method has only url variables in the method parameters");
 				}
@@ -132,7 +136,9 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 			if (valid.isValid()) {
 				List<? extends VariableElement> parameters = element.getParameters();
 
-				if (parameters.size() > variableNames.size() + 1) {
+				List<Element> queryElements = extractQueryElements(element);
+
+				if (parameters.size() > variableNames.size() + 1 + queryElements.size()) {
 					valid.invalidate();
 					printAnnotationError(element, "%s annotated method has more than one entity parameter");
 				}
@@ -149,19 +155,21 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 
 				Map<String, String> postParameters = extractPostParameters(element);
 
+				List<Element> queryElements = extractQueryElements(element);
+
 				if (postParameters == null) {
 					printAnnotationError(element, "%s annotated method has multiple form parameters with the same name");
 					valid.invalidate();
 					return;
 				}
 
-				if (!postParameters.isEmpty() && postParameters.size() + variableNames.size() < parameters.size()) {
+				if (!postParameters.isEmpty() && postParameters.size() + variableNames.size() + queryElements.size() < parameters.size()) {
 					printAnnotationError(element, "%s method cannot have both entity parameter and @Field annotated parameters");
 					valid.invalidate();
 					return;
 				}
 
-				if (postParameters.isEmpty() && parameters.size() > variableNames.size() + 1) {
+				if (postParameters.isEmpty() && parameters.size() > variableNames.size() + 1 + queryElements.size()) {
 					valid.invalidate();
 					printAnnotationError(element, "%s annotated method has more than one entity parameter");
 				}
@@ -201,9 +209,9 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 			String postParameterName = null;
 
 			if (parameter.getAnnotation(Field.class) != null) {
-				postParameterName = extractPostParameter(parameter, Field.class);
+				postParameterName = extractAnnotationValueParameterOrElementName(parameter, Field.class);
 			} else if (parameter.getAnnotation(Part.class) != null) {
-				postParameterName = extractPostParameter(parameter, Part.class);
+				postParameterName = extractAnnotationValueParameterOrElementName(parameter, Part.class);
 			}
 
 			if (postParameterName != null) {
@@ -217,10 +225,21 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 		return postParameterNameToElementName;
 	}
 
-	private String extractPostParameter(VariableElement parameter, Class<? extends Annotation> clazz) {
+	public String extractAnnotationValueParameterOrElementName(VariableElement parameter, Class<? extends Annotation> clazz) {
 		String value = extractAnnotationParameter(parameter, clazz.getCanonicalName(), "value");
 
 		return !value.equals("") ? value : parameter.getSimpleName().toString();
+	}
+
+	public List<Element> extractQueryElements(ExecutableElement element) {
+		List<Element> queryElements = new ArrayList<>();
+
+		for (VariableElement parameter : element.getParameters()) {
+			if (hasOneOfClassAnnotations(parameter, asList(QueryParam.class, QueryMap.class))) {
+				queryElements.add(parameter);
+			}
+		}
+		return queryElements;
 	}
 
 	public void urlVariableNameExistsInEnclosingAnnotation(Element element, IsValid valid) {
@@ -672,6 +691,6 @@ public class RestAnnotationHelper extends TargetAnnotationHelper {
 	}
 
 	private boolean hasPostParameterAnnotation(VariableElement variableElement) {
-		return hasOneOfClassAnnotations(variableElement, asList(Field.class, Part.class));
+		return hasOneOfClassAnnotations(variableElement, asList(Field.class, Part.class, QueryMap.class));
 	}
 }

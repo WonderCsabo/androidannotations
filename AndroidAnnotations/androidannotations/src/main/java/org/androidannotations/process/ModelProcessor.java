@@ -20,6 +20,7 @@ import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
@@ -118,6 +119,13 @@ public class ModelProcessor {
 					enclosingElement = annotatedElement;
 				} else {
 					enclosingElement = annotatedElement.getEnclosingElement();
+
+					/*
+					 * we are processing a method parameter
+					 */
+					if (enclosingElement instanceof ExecutableElement) {
+						enclosingElement = enclosingElement.getEnclosingElement();
+					}
 				}
 
 				/*
@@ -126,7 +134,7 @@ public class ModelProcessor {
 				 */
 				if (!isAbstractClass(enclosingElement)) {
 					GeneratedClassHolder holder = processHolder.getGeneratedClassHolder(enclosingElement);
-					
+
 					/*
 					 * The holder can be null if the annotated holder class is
 					 * already invalidated.

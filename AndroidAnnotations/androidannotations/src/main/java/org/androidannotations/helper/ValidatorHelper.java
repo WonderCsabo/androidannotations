@@ -76,6 +76,7 @@ import org.androidannotations.annotations.WakeLock.Level;
 import org.androidannotations.annotations.rest.Field;
 import org.androidannotations.annotations.rest.Part;
 import org.androidannotations.annotations.rest.PathParam;
+import org.androidannotations.annotations.rest.QueryParam;
 import org.androidannotations.annotations.rest.Rest;
 import org.androidannotations.annotations.sharedpreferences.DefaultBoolean;
 import org.androidannotations.annotations.sharedpreferences.DefaultFloat;
@@ -441,6 +442,10 @@ public class ValidatorHelper {
 
 	public void doesNotHaveFieldAnnotation(Element element, AnnotationElements validatedElements, IsValid valid) {
 		doesNotHaveAnnotation(element, validatedElements, Field.class, valid);
+	}
+
+	public void doesNotHaveQueryParamAnnotation(Element element, AnnotationElements validatedElements, IsValid valid) {
+		doesNotHaveAnnotation(element, validatedElements, QueryParam.class, valid);
 	}
 
 	public void doesNotHavePartAnnotation(Element element, AnnotationElements validatedElements, IsValid valid) {

@@ -26,6 +26,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 
+import org.androidannotations.annotations.rest.QueryParam;
 import org.androidannotations.handler.BaseAnnotationHandler;
 import org.androidannotations.helper.APTCodeModelHelper;
 import org.androidannotations.helper.CanonicalNameConstants;
@@ -84,7 +85,11 @@ public abstract class RestMethodHandler extends BaseAnnotationHandler<RestHolder
 
 		// RestTemplate exchange() method call
 		JInvocation exchangeCall = JExpr.invoke(holder.getRestTemplateField(), "exchange");
-		exchangeCall.arg(getUrl(element, holder));
+
+		JExpression url = getUrl(element, holder);
+		url = appendQueryParameters(executableElement, params, url);
+
+		exchangeCall.arg(url);
 		exchangeCall.arg(getHttpMethod());
 		exchangeCall.arg(getRequestEntity(executableElement, holder, methodBody, params));
 		exchangeCall.arg(getResponseClass(element, holder));
@@ -137,6 +142,31 @@ public abstract class RestMethodHandler extends BaseAnnotationHandler<RestHolder
 	}
 
 	protected abstract String getUrlSuffix(Element element);
+
+	protected JExpression appendQueryParameters(Element element, SortedMap<String, JVar> params, JExpression url) {
+		ExecutableElement executableElement = (ExecutableElement) element;
+		boolean first = true;
+
+		for (VariableElement parameter : executableElement.getParameters()) {
+			QueryParam annotation = parameter.getAnnotation(QueryParam.class);
+
+			if (annotation != null) {
+				String name = restAnnotationHelper.extractAnnotationValueParameterOrElementName(parameter, QueryParam.class);
+
+				JExpression nameExpression = null;
+
+				if (first) {
+					nameExpression = JExpr.lit("?" + name + "={" + name + "}");
+					first = false;
+				} else {
+					nameExpression = JExpr.lit("&" + name + "={" + name + "}");
+				}
+
+				url = JExpr.invoke(url, "concat").arg(nameExpression);
+			}
+		}
+		return url;
+	}
 
 	protected JExpression getHttpMethod() {
 		JClass httpMethod = classes().HTTP_METHOD;
