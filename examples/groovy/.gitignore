@@ -1,0 +1,25 @@
+# Maven
+target
+
+#Android
+gen
+bin
+
+#Gradle
+build
+.gradle
+
+# Eclipse
+.classpath
+.apt_generated
+.settings
+.project
+org.eclipse.jdt.core.prefs
+org.maven.ide.eclipse.prefs
+
+# Idea
+*.ipr
+*.iws
+*.iml
+*.idea
+local.properties
