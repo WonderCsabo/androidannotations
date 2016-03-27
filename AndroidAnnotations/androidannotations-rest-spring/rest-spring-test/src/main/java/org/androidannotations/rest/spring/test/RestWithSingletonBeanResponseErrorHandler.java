@@ -17,8 +17,9 @@ package org.androidannotations.rest.spring.test;
 
 import org.androidannotations.rest.spring.annotations.Rest;
 import org.androidannotations.rest.spring.api.RestClientSupport;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.http.client.HttpComponentsAndroidClientHttpRequestFactory;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
-@Rest(converters = { MappingJacksonHttpMessageConverter.class }, responseErrorHandler = MyResponseErrorHandlerBean.class)
+@Rest(converters = { MappingJackson2HttpMessageConverter.class }, responseErrorHandler = MyResponseErrorHandlerBean.class, requestFactory = HttpComponentsAndroidClientHttpRequestFactory.class)
 public interface RestWithSingletonBeanResponseErrorHandler extends RestClientSupport {
 }

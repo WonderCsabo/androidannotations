@@ -20,9 +20,9 @@ import org.androidannotations.rest.spring.api.RestClientErrorHandling;
 import org.androidannotations.rest.spring.api.RestClientHeaders;
 import org.androidannotations.rest.spring.api.RestClientRootUrl;
 import org.androidannotations.rest.spring.api.RestClientSupport;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
-@Rest(converters = { MappingJacksonHttpMessageConverter.class })
+@Rest(converters = { MappingJackson2HttpMessageConverter.class })
 public interface ClientWithAllInterfaces extends RestClientErrorHandling, RestClientHeaders, RestClientRootUrl, RestClientSupport {
 
 }

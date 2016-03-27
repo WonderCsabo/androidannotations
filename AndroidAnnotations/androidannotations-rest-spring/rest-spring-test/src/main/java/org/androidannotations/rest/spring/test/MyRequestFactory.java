@@ -16,10 +16,10 @@
 package org.androidannotations.rest.spring.test;
 
 import org.androidannotations.annotations.EBean;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.client.HttpComponentsAndroidClientHttpRequestFactory;
 
 @EBean
-public class MyRequestFactory extends HttpComponentsClientHttpRequestFactory {
+public class MyRequestFactory extends HttpComponentsAndroidClientHttpRequestFactory {
 
 	private static final int TIME_OUT = 30 * 1000;
 

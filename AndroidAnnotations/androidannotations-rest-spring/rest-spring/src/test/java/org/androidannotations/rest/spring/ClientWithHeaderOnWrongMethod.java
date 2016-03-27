@@ -17,10 +17,10 @@ package org.androidannotations.rest.spring;
 
 import org.androidannotations.rest.spring.annotations.Header;
 import org.androidannotations.rest.spring.annotations.Rest;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
-@Rest(converters = MappingJacksonHttpMessageConverter.class)
+@Rest(converters = MappingJackson2HttpMessageConverter.class)
 public interface ClientWithHeaderOnWrongMethod {
 
 	@Header(name = "testKey1", value = "testVal1")

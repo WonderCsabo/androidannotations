@@ -27,11 +27,13 @@ import org.androidannotations.rest.spring.annotations.Rest;
 import org.androidannotations.rest.spring.api.RestClientErrorHandling;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.http.client.HttpComponentsAndroidClientHttpRequestFactory;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
 // if defined, the rootUrl will be added as a prefix to every request
-@Rest(rootUrl = "http://company.com/ajax/services", converters = { MappingJacksonHttpMessageConverter.class }, interceptors = { RequestInterceptor.class })
+@Rest(rootUrl = "http://company.com/ajax/services", converters = { MappingJackson2HttpMessageConverter.class }, interceptors = {
+		RequestInterceptor.class }, requestFactory = HttpComponentsAndroidClientHttpRequestFactory.class)
 public interface HttpMethodsService extends RestClientErrorHandling {
 
 	@Delete("/delete/")

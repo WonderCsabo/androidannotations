@@ -19,9 +19,10 @@ import org.androidannotations.rest.spring.annotations.Get;
 import org.androidannotations.rest.spring.annotations.Path;
 import org.androidannotations.rest.spring.annotations.Rest;
 import org.androidannotations.rest.spring.api.RestClientSupport;
+import org.springframework.http.client.HttpComponentsAndroidClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
 
-@Rest(converters = { StringHttpMessageConverter.class })
+@Rest(converters = { StringHttpMessageConverter.class }, requestFactory = HttpComponentsAndroidClientHttpRequestFactory.class)
 public interface PathRestService extends RestClientSupport {
 
 	@Get(value = "{hello}{bye}{parameterName}")

@@ -18,9 +18,9 @@ package org.androidannotations.rest.spring;
 import org.androidannotations.rest.spring.annotations.Get;
 import org.androidannotations.rest.spring.annotations.Path;
 import org.androidannotations.rest.spring.annotations.Rest;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
-@Rest(converters = MappingJacksonHttpMessageConverter.class)
+@Rest(converters = MappingJackson2HttpMessageConverter.class)
 public interface ClientWithWrongPathVariables {
 
 	@Get("/duplicates/{v1}")

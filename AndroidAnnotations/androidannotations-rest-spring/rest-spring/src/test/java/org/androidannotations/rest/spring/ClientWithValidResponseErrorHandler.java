@@ -17,8 +17,8 @@ package org.androidannotations.rest.spring;
 
 
 import org.androidannotations.rest.spring.annotations.Rest;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
-@Rest(converters = { MappingJacksonHttpMessageConverter.class }, responseErrorHandler = ValidResponseErrorHandler.class)
+@Rest(converters = { MappingJackson2HttpMessageConverter.class }, responseErrorHandler = ValidResponseErrorHandler.class)
 public interface ClientWithValidResponseErrorHandler {
 }

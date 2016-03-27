@@ -21,9 +21,10 @@ import org.androidannotations.rest.spring.annotations.Part;
 import org.androidannotations.rest.spring.annotations.Post;
 import org.androidannotations.rest.spring.annotations.Rest;
 import org.androidannotations.rest.spring.api.RestClientSupport;
+import org.springframework.http.client.HttpComponentsAndroidClientHttpRequestFactory;
 import org.springframework.http.converter.FormHttpMessageConverter;
 
-@Rest(converters = { FormHttpMessageConverter.class })
+@Rest(converters = { FormHttpMessageConverter.class }, requestFactory = HttpComponentsAndroidClientHttpRequestFactory.class)
 public interface PostRestService extends RestClientSupport {
 
 	@Post("/")

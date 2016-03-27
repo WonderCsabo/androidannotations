@@ -44,12 +44,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.FormHttpMessageConverter;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 // if defined, the rootUrl will be added as a prefix to every request
-@Rest(rootUrl = "http://company.com/ajax/services", converters = { MappingJacksonHttpMessageConverter.class, EBeanConverter.class, FormHttpMessageConverter.class }, //
+@Rest(rootUrl = "http://company.com/ajax/services", converters = { MappingJackson2HttpMessageConverter.class, EBeanConverter.class, FormHttpMessageConverter.class }, //
 				interceptors = { RequestInterceptor.class, EBeanInterceptor.class }, //
 				requestFactory = MyRequestFactory.class)
 public interface MyService {
